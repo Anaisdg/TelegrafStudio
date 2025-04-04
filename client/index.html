@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>Telegraf Configurator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+      .node { 
+        min-width: 150px;
+        transition: all 0.2s;
+      }
+      .connection {
+        stroke: #6B7280;
+        stroke-width: 2px;
+      }
+      .connection-point {
+        fill: #6B7280;
+        stroke: white;
+        stroke-width: 2px;
+      }
+      .connection-active {
+        stroke: #3B82F6;
+        stroke-width: 3px;
+      }
+      .grid-bg {
+        background-size: 20px 20px;
+        background-image: radial-gradient(circle, #4B5563 1px, rgba(0, 0, 0, 0) 1px);
+      }
+      :root {
+        --plugin-input: #60A5FA;
+        --plugin-processor: #F97316;
+        --plugin-aggregator: #A855F7;
+        --plugin-serializer: #EC4899;
+        --plugin-output: #10B981;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- This script injects a replit badge into the page, please feel free to remove this line -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-badge-v3.js"></script>
+  </body>
+</html>
