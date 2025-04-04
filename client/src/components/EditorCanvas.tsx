@@ -320,31 +320,29 @@ const EditorCanvas = () => {
         
         if (!type || !pluginName) return;
 
+        // Get the position where the node was dropped in the flow space
         const position = reactFlowInstance.screenToFlowPosition({
           x: event.clientX - reactFlowBounds.left,
           y: event.clientY - reactFlowBounds.top,
         });
 
-        const newNode = {
-          id: `${pluginName}-${uuidv4().slice(0, 4)}`,
-          type,
-          position,
-          data: {
-            plugin: pluginName,
-            // Access default plugin config from shared schema instead
-            ...getDefaultNodeData(pluginName),
-          },
-        };
+        // Generate a unique ID for the new node
+        const nodeId = `${pluginName}-${uuidv4().slice(0, 4)}`;
 
         // Create the telegraf config node
         const telegrafNode = {
-          id: newNode.id,
+          id: nodeId,
           type: type as typeof PluginType[keyof typeof PluginType],
           plugin: pluginName,
-          position,
+          // Store the position explicitly
+          position: {
+            x: position.x,
+            y: position.y
+          },
           data: { ...getDefaultNodeData(pluginName) },
         };
 
+        // Update the telegraf config with the new node
         setTelegrafConfig({
           ...telegrafConfig,
           nodes: [...telegrafConfig.nodes, telegrafNode],
