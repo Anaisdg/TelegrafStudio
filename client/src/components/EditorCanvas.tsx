@@ -27,8 +27,16 @@ type CustomNodeProps = NodeProps & {
   onDelete?: (id: string) => void;
 }
 
+// Custom styling for the Handle components
+const handleStyle = {
+  width: '16px',
+  height: '16px',
+  background: '#555',
+  border: '2px solid white'
+};
+
 const InputNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
-  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#60A5FA', minWidth: '150px' }}>
+  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#60A5FA', minWidth: '120px' }}>
     <div className="bg-plugin-input text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#60A5FA' }}>
       <span>{data.plugin}</span>
       <div className="flex space-x-1">
@@ -52,20 +60,21 @@ const InputNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
         </button>
       </div>
     </div>
-    <div className="p-3 text-sm bg-white rounded-b-lg">
-      <div className="text-gray-500 mb-1">Inputs:</div>
-      <div className="text-gray-700 mb-2">None</div>
-      <div className="text-gray-500 mb-1">Outputs:</div>
-      <div className="flex items-center text-gray-700">
-        <span className="mr-2">All metrics</span>
-        <Handle type="source" position={Position.Right} id="output" />
+    <div className="p-3 text-sm bg-white rounded-b-lg flex flex-col items-center">
+      <div className="flex items-center justify-end w-full py-2">
+        <Handle 
+          type="source" 
+          position={Position.Right} 
+          id="output" 
+          style={handleStyle}
+        />
       </div>
     </div>
   </div>
 );
 
 const ProcessorNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
-  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#F97316', minWidth: '150px' }}>
+  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#F97316', minWidth: '120px' }}>
     <div className="bg-plugin-processor text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#F97316' }}>
       <span>{data.plugin}</span>
       <div className="flex space-x-1">
@@ -89,23 +98,27 @@ const ProcessorNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
         </button>
       </div>
     </div>
-    <div className="p-3 text-sm bg-white rounded-b-lg">
-      <div className="text-gray-500 mb-1">Inputs:</div>
-      <div className="flex items-center text-gray-700 mb-2">
-        <Handle type="target" position={Position.Left} id="input" />
-        <span>Processor input</span>
-      </div>
-      <div className="text-gray-500 mb-1">Outputs:</div>
-      <div className="flex items-center text-gray-700">
-        <span className="mr-2">Processed data</span>
-        <Handle type="source" position={Position.Right} id="output" />
+    <div className="p-3 text-sm bg-white rounded-b-lg flex flex-col items-center">
+      <div className="flex items-center w-full justify-between py-2">
+        <Handle 
+          type="target" 
+          position={Position.Left} 
+          id="input" 
+          style={handleStyle}
+        />
+        <Handle 
+          type="source" 
+          position={Position.Right} 
+          id="output" 
+          style={handleStyle}
+        />
       </div>
     </div>
   </div>
 );
 
 const OutputNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
-  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#10B981', minWidth: '150px' }}>
+  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#10B981', minWidth: '120px' }}>
     <div className="bg-plugin-output text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#10B981' }}>
       <span>{data.plugin}</span>
       <div className="flex space-x-1">
@@ -129,14 +142,15 @@ const OutputNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
         </button>
       </div>
     </div>
-    <div className="p-3 text-sm bg-white rounded-b-lg">
-      <div className="text-gray-500 mb-1">Inputs:</div>
-      <div className="flex items-center text-gray-700 mb-2">
-        <Handle type="target" position={Position.Left} id="input" />
-        <span>Output input</span>
+    <div className="p-3 text-sm bg-white rounded-b-lg flex flex-col items-center">
+      <div className="flex items-center justify-start w-full py-2">
+        <Handle 
+          type="target" 
+          position={Position.Left} 
+          id="input" 
+          style={handleStyle}
+        />
       </div>
-      <div className="text-gray-500 mb-1">Outputs:</div>
-      <div className="text-gray-700">None</div>
     </div>
   </div>
 );
@@ -206,8 +220,15 @@ const EditorCanvas = () => {
       target: connection.target,
       type: 'default',
       data: connection.filters,
+      style: { 
+        strokeWidth: 3, 
+        stroke: '#555' 
+      },
       markerEnd: {
         type: MarkerType.ArrowClosed,
+        width: 20,
+        height: 20,
+        color: '#555'
       },
     }));
   }, [telegrafConfig.connections]);
@@ -280,8 +301,15 @@ const EditorCanvas = () => {
         source: connection.source || '',
         target: connection.target || '',
         type: 'default',
+        style: { 
+          strokeWidth: 3, 
+          stroke: '#555' 
+        },
         markerEnd: {
           type: MarkerType.ArrowClosed,
+          width: 20,
+          height: 20,
+          color: '#555'
         },
       };
 
@@ -373,6 +401,7 @@ const EditorCanvas = () => {
           onPaneClick={onPaneClick}
           nodeTypes={nodeTypes}
           connectionLineType={ConnectionLineType.SmoothStep}
+          connectionLineStyle={{ stroke: '#555', strokeWidth: 3 }}
           onDrop={onDrop}
           onDragOver={onDragOver}
           onInit={setReactFlowInstance}
