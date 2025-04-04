@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { useRef, useCallback, useEffect, useState, useMemo } from 'react';
 import ReactFlow, {
   ReactFlowProvider,
   Controls,
@@ -20,17 +20,34 @@ import 'reactflow/dist/style.css';
 import { useTelegrafConfig } from '@/hooks/TelegrafContext';
 import { v4 as uuidv4 } from 'uuid';
 import { PluginType } from '@shared/schema';
+import { getDefaultNodeData } from '@/utils/telegraf';
 
-// Custom node components
-const InputNode = ({ data, id, selected }: NodeProps) => (
+// Custom node components with delete functionality
+type CustomNodeProps = NodeProps & {
+  onDelete?: (id: string) => void;
+}
+
+const InputNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
   <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#60A5FA', minWidth: '150px' }}>
     <div className="bg-plugin-input text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#60A5FA' }}>
       <span>{data.plugin}</span>
       <div className="flex space-x-1">
-        <button className="w-5 h-5 rounded hover:bg-blue-400 flex items-center justify-center text-xs">
+        <button 
+          className="w-5 h-5 rounded hover:bg-blue-400 flex items-center justify-center text-xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            // This button is just for show, no action needed
+          }}
+        >
           <i className="ri-settings-4-line"></i>
         </button>
-        <button className="w-5 h-5 rounded hover:bg-blue-400 flex items-center justify-center text-xs">
+        <button 
+          className="w-5 h-5 rounded hover:bg-blue-400 flex items-center justify-center text-xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete && onDelete(id);
+          }}
+        >
           <i className="ri-close-line"></i>
         </button>
       </div>
@@ -47,15 +64,27 @@ const InputNode = ({ data, id, selected }: NodeProps) => (
   </div>
 );
 
-const ProcessorNode = ({ data, id, selected }: NodeProps) => (
+const ProcessorNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
   <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#F97316', minWidth: '150px' }}>
     <div className="bg-plugin-processor text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#F97316' }}>
       <span>{data.plugin}</span>
       <div className="flex space-x-1">
-        <button className="w-5 h-5 rounded hover:bg-orange-400 flex items-center justify-center text-xs">
+        <button 
+          className="w-5 h-5 rounded hover:bg-orange-400 flex items-center justify-center text-xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            // This button is just for show, no action needed
+          }}
+        >
           <i className="ri-settings-4-line"></i>
         </button>
-        <button className="w-5 h-5 rounded hover:bg-orange-400 flex items-center justify-center text-xs">
+        <button 
+          className="w-5 h-5 rounded hover:bg-orange-400 flex items-center justify-center text-xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete && onDelete(id);
+          }}
+        >
           <i className="ri-close-line"></i>
         </button>
       </div>
@@ -75,15 +104,27 @@ const ProcessorNode = ({ data, id, selected }: NodeProps) => (
   </div>
 );
 
-const OutputNode = ({ data, id, selected }: NodeProps) => (
+const OutputNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
   <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#10B981', minWidth: '150px' }}>
     <div className="bg-plugin-output text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#10B981' }}>
       <span>{data.plugin}</span>
       <div className="flex space-x-1">
-        <button className="w-5 h-5 rounded hover:bg-emerald-400 flex items-center justify-center text-xs">
+        <button 
+          className="w-5 h-5 rounded hover:bg-emerald-400 flex items-center justify-center text-xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            // This button is just for show, no action needed
+          }}
+        >
           <i className="ri-settings-4-line"></i>
         </button>
-        <button className="w-5 h-5 rounded hover:bg-emerald-400 flex items-center justify-center text-xs">
+        <button 
+          className="w-5 h-5 rounded hover:bg-emerald-400 flex items-center justify-center text-xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete && onDelete(id);
+          }}
+        >
           <i className="ri-close-line"></i>
         </button>
       </div>
@@ -100,12 +141,6 @@ const OutputNode = ({ data, id, selected }: NodeProps) => (
   </div>
 );
 
-const nodeTypes: NodeTypes = {
-  input: InputNode,
-  processor: ProcessorNode,
-  output: OutputNode,
-};
-
 const EditorCanvas = () => {
   const { 
     telegrafConfig, 
@@ -119,6 +154,36 @@ const EditorCanvas = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+
+  // Handle node deletion
+  const handleNodeDelete = useCallback((nodeId: string) => {
+    // Remove the node from telegrafConfig
+    const updatedNodes = telegrafConfig.nodes.filter(node => node.id !== nodeId);
+    
+    // Remove any connections that involve this node
+    const updatedConnections = telegrafConfig.connections.filter(
+      connection => connection.source !== nodeId && connection.target !== nodeId
+    );
+    
+    // Update the telegrafConfig
+    setTelegrafConfig({
+      ...telegrafConfig,
+      nodes: updatedNodes,
+      connections: updatedConnections
+    });
+    
+    // If the deleted node was selected, clear the selection
+    if (selectedNode && selectedNode.id === nodeId) {
+      setSelectedNode(null);
+    }
+  }, [telegrafConfig, setTelegrafConfig, selectedNode, setSelectedNode]);
+
+  // Create memoized node types to avoid React Flow warning
+  const nodeTypes = useMemo(() => ({
+    input: (props: NodeProps) => <InputNode {...props} onDelete={handleNodeDelete} />,
+    processor: (props: NodeProps) => <ProcessorNode {...props} onDelete={handleNodeDelete} />,
+    output: (props: NodeProps) => <OutputNode {...props} onDelete={handleNodeDelete} />,
+  }), [handleNodeDelete]);
 
   // Convert telegrafConfig nodes to react-flow nodes
   const convertToReactFlowNodes = useCallback(() => {
@@ -152,6 +217,36 @@ const EditorCanvas = () => {
     setNodes(convertToReactFlowNodes());
     setEdges(convertToReactFlowEdges());
   }, [telegrafConfig, convertToReactFlowNodes, convertToReactFlowEdges, setNodes, setEdges]);
+
+  // When nodes change position, update the telegrafConfig
+  const handleNodesChange = useCallback((changes: any) => {
+    onNodesChange(changes);
+    
+    // Filter for position changes only
+    const positionChanges = changes.filter((change: any) => 
+      change.type === 'position' && change.position && change.dragging === false
+    );
+    
+    if (positionChanges.length > 0) {
+      // Update node positions in telegrafConfig
+      const updatedNodes = [...telegrafConfig.nodes];
+      
+      positionChanges.forEach((change: any) => {
+        const nodeIndex = updatedNodes.findIndex(node => node.id === change.id);
+        if (nodeIndex !== -1) {
+          updatedNodes[nodeIndex] = {
+            ...updatedNodes[nodeIndex],
+            position: change.position
+          };
+        }
+      });
+      
+      setTelegrafConfig({
+        ...telegrafConfig,
+        nodes: updatedNodes
+      });
+    }
+  }, [onNodesChange, telegrafConfig, setTelegrafConfig]);
 
   // Handle node selection
   const onNodeClick = useCallback(
@@ -236,7 +331,8 @@ const EditorCanvas = () => {
           position,
           data: {
             plugin: pluginName,
-            ...telegrafConfig[pluginName],
+            // Access default plugin config from shared schema instead
+            ...getDefaultNodeData(pluginName),
           },
         };
 
@@ -246,7 +342,7 @@ const EditorCanvas = () => {
           type: type as typeof PluginType[keyof typeof PluginType],
           plugin: pluginName,
           position,
-          data: { ...telegrafConfig[pluginName] },
+          data: { ...getDefaultNodeData(pluginName) },
         };
 
         setTelegrafConfig({
@@ -263,13 +359,15 @@ const EditorCanvas = () => {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
+
+  
   return (
     <div className="flex-1 overflow-hidden relative" ref={reactFlowWrapper}>
       <ReactFlowProvider>
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
+          onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onNodeClick={onNodeClick}
@@ -282,7 +380,7 @@ const EditorCanvas = () => {
           onInit={setReactFlowInstance}
         >
           <Controls />
-          <Background variant="dots" gap={20} color="#4B5563" />
+          <Background color="#4B5563" gap={20} />
         </ReactFlow>
       </ReactFlowProvider>
     </div>
