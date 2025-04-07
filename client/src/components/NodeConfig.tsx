@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { useTelegrafConfig } from '@/hooks/TelegrafContext';
 import { Node } from '@shared/schema';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { parseTomlConfig } from '@/utils/pluginParser';
+import { PluginConfigForm } from '@/components/PluginConfigForm';
+import { getDefaultPluginConfig } from '@/utils/telegraf';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -15,10 +18,108 @@ interface NodeConfigProps {
 export default function NodeConfig({ node }: NodeConfigProps) {
   const { telegrafConfig, setTelegrafConfig } = useTelegrafConfig();
   const [nodeData, setNodeData] = useState<any>({ ...node.data });
+  const [loading, setLoading] = useState(false);
+  const [pluginConfig, setPluginConfig] = useState<any>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     setNodeData({ ...node.data });
+    loadPluginConfig();
   }, [node]);
+
+  const loadPluginConfig = async () => {
+    setLoading(true);
+    
+    try {
+      // Get the node type (input, output, processor)
+      const nodeType = node.type === 'input' ? 'inputs' : 
+                      node.type === 'output' ? 'outputs' : 'processors';
+      
+      // For demo purposes, use the predefined config for influxdb_v2
+      // In production, we would fetch this from GitHub or a local cache
+      if (node.plugin === 'influxdb_v2') {
+        const sampleConfig = `# Configuration for sending metrics to InfluxDB 2.0
+[[outputs.influxdb_v2]]
+  # The URLs of the InfluxDB cluster nodes.
+  #
+  # Multiple URLs can be specified for a single cluster, only ONE of the
+  # urls will be written to each interval.
+  #   ex: urls = ["https://us-west-2-1.aws.cloud2.influxdata.com"]
+  urls = ["http://127.0.0.1:8086"]
+
+  # Local address to bind when connecting to the server
+  # If empty or not set, the local address is automatically chosen.
+  # local_address = ""
+
+  # Token for authentication.
+  token = ""
+
+  # Organization is the name of the organization you wish to write to.
+  organization = ""
+
+  # Destination bucket to write into.
+  bucket = ""
+
+  # The value of this tag will be used to determine the bucket.  If this
+  # tag is not set the 'bucket' option is used as the default.
+  # bucket_tag = ""
+
+  # If true, the bucket tag will not be added to the metric.
+  # exclude_bucket_tag = false
+
+  # Timeout for HTTP messages.
+  # timeout = "5s"
+
+  # Additional HTTP headers
+  # http_headers = {"X-Custom-Header" = "custom-value"}
+
+  # HTTP Proxy override, if unset values the standard proxy environment
+  # variables are consulted to determine which proxy, if any, should be used.
+  # http_proxy = "http://corporate.proxy:3128"
+
+  # HTTP User-Agent
+  # user_agent = "telegraf"
+
+  # Content-Encoding for write request body, can be set to "gzip" to
+  # compress body or "identity" to apply no encoding.
+  # content_encoding = "gzip"
+
+  # Enable or disable uint support for writing uints influxdb 2.0.
+  # influx_uint_support = false
+
+  # When true, Telegraf will omit the timestamp on data to allow InfluxDB
+  # to set the timestamp of the data during ingestion. This is generally NOT
+  # what you want as it can lead to data points captured at different times
+  # getting omitted due to similar data.
+  # influx_omit_timestamp = false`;
+          
+        const config = parseTomlConfig(sampleConfig, 'influxdb_v2', 'output');
+        setPluginConfig(config);
+      } else {
+        // For other plugins, use default configs for the demo
+        // In real app, we would fetch from GitHub
+        const defaultConfig = getDefaultPluginConfig(node.plugin, node.type);
+        if (defaultConfig) {
+          setPluginConfig(defaultConfig);
+        } else {
+          toast({
+            title: 'Plugin Config Not Found',
+            description: `Configuration not available for ${node.plugin}`,
+            variant: 'destructive'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading plugin config:', error);
+      toast({
+        title: 'Failed to load plugin configuration',
+        description: `Could not load configuration for ${node.plugin}`,
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDataChange = (key: string, value: any) => {
     setNodeData({
@@ -52,8 +153,14 @@ export default function NodeConfig({ node }: NodeConfigProps) {
       ...telegrafConfig,
       nodes: updatedNodes,
     });
+    
+    toast({
+      title: 'Configuration Updated',
+      description: `${node.plugin} configuration has been updated`,
+    });
   };
 
+  // Special forms for plugins that need custom UI
   const renderConverterForm = () => (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -129,167 +236,6 @@ export default function NodeConfig({ node }: NodeConfigProps) {
           onChange={(e) => console.log('Filter expression changed')}
         />
       </div>
-    </div>
-  );
-
-  const renderCpuForm = () => (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <div className="flex items-center">
-          <Checkbox 
-            id="percpu" 
-            checked={nodeData.percpu === true}
-            onCheckedChange={(checked) => handleDataChange('percpu', checked === true)}
-            className="mr-2"
-          />
-          <Label htmlFor="percpu">Collect per-CPU metrics</Label>
-        </div>
-        <div className="flex items-center">
-          <Checkbox 
-            id="totalcpu" 
-            checked={nodeData.totalcpu === true}
-            onCheckedChange={(checked) => handleDataChange('totalcpu', checked === true)}
-            className="mr-2"
-          />
-          <Label htmlFor="totalcpu">Collect total CPU metrics</Label>
-        </div>
-        <div className="flex items-center">
-          <Checkbox 
-            id="collect_cpu_time" 
-            checked={nodeData.collect_cpu_time === true}
-            onCheckedChange={(checked) => handleDataChange('collect_cpu_time', checked === true)}
-            className="mr-2"
-          />
-          <Label htmlFor="collect_cpu_time">Collect CPU time metrics</Label>
-        </div>
-        <div className="flex items-center">
-          <Checkbox 
-            id="report_active" 
-            checked={nodeData.report_active === true}
-            onCheckedChange={(checked) => handleDataChange('report_active', checked === true)}
-            className="mr-2"
-          />
-          <Label htmlFor="report_active">Report active time metrics</Label>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderMemForm = () => (
-    <div className="space-y-4">
-      <div className="text-sm text-gray-500 italic">
-        No specific configuration for memory plugin
-      </div>
-    </div>
-  );
-
-  const renderInfluxDbForm = () => (
-    <div className="space-y-4">
-      <div>
-        <Label className="block text-sm font-medium text-gray-700 mb-1">URLs</Label>
-        <Input 
-          className="w-full"
-          value={Array.isArray(nodeData.urls) ? nodeData.urls[0] : "http://localhost:8086"}
-          onChange={(e) => handleDataChange('urls', [e.target.value])}
-        />
-      </div>
-      
-      <div>
-        <Label className="block text-sm font-medium text-gray-700 mb-1">Organization</Label>
-        <Input 
-          className="w-full"
-          value={nodeData.organization || "my-org"}
-          onChange={(e) => handleDataChange('organization', e.target.value)}
-        />
-      </div>
-      
-      <div>
-        <Label className="block text-sm font-medium text-gray-700 mb-1">Bucket</Label>
-        <Input 
-          className="w-full"
-          value={nodeData.bucket || "telegraf"}
-          onChange={(e) => handleDataChange('bucket', e.target.value)}
-        />
-      </div>
-      
-      <div>
-        <Label className="block text-sm font-medium text-gray-700 mb-1">Token</Label>
-        <Input 
-          className="w-full font-mono"
-          value={nodeData.token || "@{mystore:influx_token}"}
-          onChange={(e) => handleDataChange('token', e.target.value)}
-        />
-        <p className="text-xs text-gray-500 mt-1">Use @{'{store:key}'} syntax for secrets</p>
-      </div>
-    </div>
-  );
-
-  const renderFileForm = () => (
-    <div className="space-y-4">
-      <div>
-        <Label className="block text-sm font-medium text-gray-700 mb-1">Output Files</Label>
-        <Textarea 
-          className="w-full font-mono"
-          value={Array.isArray(nodeData.files) ? nodeData.files.join('\n') : "stdout"}
-          onChange={(e) => handleDataChange('files', e.target.value.split('\n'))}
-          rows={3}
-        />
-        <p className="text-xs text-gray-500 mt-1">One file path per line</p>
-      </div>
-      
-      <div>
-        <Label className="block text-sm font-medium text-gray-700 mb-1">Rotation Interval</Label>
-        <Input 
-          className="w-full"
-          value={nodeData.rotation_interval || "1d"}
-          onChange={(e) => handleDataChange('rotation_interval', e.target.value)}
-        />
-      </div>
-      
-      <div>
-        <Label className="block text-sm font-medium text-gray-700 mb-1">Data Format</Label>
-        <Select 
-          value={nodeData.data_format || "influx"} 
-          onValueChange={(value) => handleDataChange('data_format', value)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select format" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="influx">InfluxDB Line Protocol</SelectItem>
-            <SelectItem value="json">JSON</SelectItem>
-            <SelectItem value="csv">CSV</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-
-  // Render different forms based on plugin type
-  const renderPluginForm = () => {
-    switch (node.plugin) {
-      case 'cpu':
-        return renderCpuForm();
-      case 'mem':
-        return renderMemForm();
-      case 'converter':
-        return renderConverterForm();
-      case 'influxdb_v2':
-        return renderInfluxDbForm();
-      case 'file':
-        return renderFileForm();
-      default:
-        return (
-          <div className="text-center text-gray-500 py-10">
-            <p>No configuration available for this plugin</p>
-          </div>
-        );
-    }
-  };
-
-  return (
-    <form className="space-y-4" id="node-config">
-      {renderPluginForm()}
       
       <div className="pt-4 border-t border-gray-200">
         <Button 
@@ -300,6 +246,55 @@ export default function NodeConfig({ node }: NodeConfigProps) {
           Apply Changes
         </Button>
       </div>
-    </form>
+    </div>
+  );
+
+  // Render content based on whether we have parsed plugin config
+  const renderContent = () => {
+    // For converter plugin, use the custom form
+    if (node.plugin === 'converter') {
+      return renderConverterForm();
+    }
+    
+    // For plugins with parsed config, use the generic form
+    if (pluginConfig) {
+      return (
+        <PluginConfigForm 
+          pluginConfig={pluginConfig} 
+          currentValues={nodeData}
+          onChange={handleDataChange}
+          onSave={handleApplyChanges}
+        />
+      );
+    }
+    
+    // Loading state
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center h-40">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      );
+    }
+    
+    // Fallback for plugins without config
+    return (
+      <div className="text-center text-gray-500 py-10">
+        <p>No configuration available for this plugin</p>
+        <Button 
+          variant="outline" 
+          className="mt-4" 
+          onClick={loadPluginConfig}
+        >
+          Retry Loading Config
+        </Button>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-4" id="node-config">
+      {renderContent()}
+    </div>
   );
 }

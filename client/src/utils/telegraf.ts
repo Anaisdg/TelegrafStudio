@@ -1,4 +1,5 @@
 import { TelegrafConfig, PluginType } from '@shared/schema';
+import { PluginConfig } from './pluginParser';
 
 /**
  * Converts a TelegrafConfig object to TOML format
@@ -130,4 +131,137 @@ export function getDefaultNodeData(plugin: string): any {
     default:
       return {};
   }
+}
+
+/**
+ * Returns a pre-defined plugin configuration for a given plugin and type
+ * In a production app, these would be fetched from GitHub or a plugin registry
+ */
+export function getDefaultPluginConfig(plugin: string, type: string): PluginConfig | null {
+  if (plugin === 'influxdb_v2' && type === 'output') {
+    return {
+      name: 'influxdb_v2',
+      displayName: 'InfluxDB v2',
+      type: 'output',
+      description: 'Configuration for sending metrics to InfluxDB 2.0',
+      fields: [
+        {
+          name: 'urls',
+          type: 'array',
+          required: true,
+          sensitive: false,
+          default: ['http://127.0.0.1:8086'],
+          description: 'The URLs of the InfluxDB cluster nodes. Multiple URLs can be specified for a single cluster, only ONE of the urls will be written to each interval.'
+        },
+        {
+          name: 'token',
+          type: 'string',
+          required: true,
+          sensitive: true,
+          default: '',
+          description: 'Token for authentication.'
+        },
+        {
+          name: 'organization',
+          type: 'string',
+          required: true,
+          sensitive: false,
+          default: '',
+          description: 'Organization is the name of the organization you wish to write to.'
+        },
+        {
+          name: 'bucket',
+          type: 'string',
+          required: true,
+          sensitive: false,
+          default: '',
+          description: 'Destination bucket to write into.'
+        }
+      ]
+    };
+  } else if (plugin === 'cpu' && type === 'input') {
+    return {
+      name: 'cpu',
+      displayName: 'CPU',
+      type: 'input',
+      description: 'Read metrics about cpu usage',
+      fields: [
+        {
+          name: 'percpu',
+          type: 'boolean',
+          required: false,
+          sensitive: false,
+          default: true,
+          description: 'Whether to report per-cpu metrics'
+        },
+        {
+          name: 'totalcpu',
+          type: 'boolean',
+          required: false,
+          sensitive: false,
+          default: true,
+          description: 'Whether to report total system cpu metrics'
+        },
+        {
+          name: 'collect_cpu_time',
+          type: 'boolean',
+          required: false,
+          sensitive: false,
+          default: false,
+          description: 'If true, collect raw CPU time metrics'
+        },
+        {
+          name: 'report_active',
+          type: 'boolean',
+          required: false,
+          sensitive: false,
+          default: false,
+          description: 'If true, report sum of all non-idle CPU states'
+        }
+      ]
+    };
+  } else if (plugin === 'mem' && type === 'input') {
+    return {
+      name: 'mem',
+      displayName: 'Memory',
+      type: 'input',
+      description: 'Read metrics about system memory usage',
+      fields: []
+    };
+  } else if (plugin === 'file' && type === 'output') {
+    return {
+      name: 'file',
+      displayName: 'File',
+      type: 'output',
+      description: 'Send telegraf metrics to file(s)',
+      fields: [
+        {
+          name: 'files',
+          type: 'array',
+          required: true,
+          sensitive: false,
+          default: ['stdout'],
+          description: 'Files to write to, "stdout" is a specially handled file'
+        },
+        {
+          name: 'rotation_interval',
+          type: 'string',
+          required: false,
+          sensitive: false,
+          default: '0d',
+          description: 'Duration after which a new file is created'
+        },
+        {
+          name: 'data_format',
+          type: 'string',
+          required: false,
+          sensitive: false,
+          default: 'influx',
+          description: 'Data format to output'
+        }
+      ]
+    };
+  }
+  
+  return null;
 }
