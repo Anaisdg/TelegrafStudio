@@ -226,8 +226,8 @@ const EditorCanvas = () => {
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        width: 20,
-        height: 20,
+        width: 14,
+        height: 14,
         color: '#555'
       },
     }));
