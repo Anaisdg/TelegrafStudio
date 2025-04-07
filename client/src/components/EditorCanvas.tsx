@@ -36,122 +36,77 @@ const handleStyle = {
 };
 
 const InputNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
-  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#60A5FA', minWidth: '120px' }}>
+  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#60A5FA', minWidth: '100px' }}>
     <div className="bg-plugin-input text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#60A5FA' }}>
       <span>{data.plugin}</span>
-      <div className="flex space-x-1">
-        <button 
-          className="w-5 h-5 rounded hover:bg-blue-400 flex items-center justify-center text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            // This button is just for show, no action needed
-          }}
-        >
-          <i className="ri-settings-4-line"></i>
-        </button>
-        <button 
-          className="w-5 h-5 rounded hover:bg-blue-400 flex items-center justify-center text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete && onDelete(id);
-          }}
-        >
-          <i className="ri-close-line"></i>
-        </button>
-      </div>
+      <button 
+        className="w-5 h-5 rounded hover:bg-blue-400 flex items-center justify-center text-xs"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete && onDelete(id);
+        }}
+      >
+        <i className="ri-close-line"></i>
+      </button>
     </div>
-    <div className="p-3 text-sm bg-white rounded-b-lg flex flex-col items-center">
-      <div className="flex items-center justify-end w-full py-2">
-        <Handle 
-          type="source" 
-          position={Position.Right} 
-          id="output" 
-          style={handleStyle}
-        />
-      </div>
-    </div>
+    <Handle 
+      type="source" 
+      position={Position.Right} 
+      id="output" 
+      style={handleStyle}
+    />
   </div>
 );
 
 const ProcessorNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
-  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#F97316', minWidth: '120px' }}>
+  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#F97316', minWidth: '100px' }}>
     <div className="bg-plugin-processor text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#F97316' }}>
       <span>{data.plugin}</span>
-      <div className="flex space-x-1">
-        <button 
-          className="w-5 h-5 rounded hover:bg-orange-400 flex items-center justify-center text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            // This button is just for show, no action needed
-          }}
-        >
-          <i className="ri-settings-4-line"></i>
-        </button>
-        <button 
-          className="w-5 h-5 rounded hover:bg-orange-400 flex items-center justify-center text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete && onDelete(id);
-          }}
-        >
-          <i className="ri-close-line"></i>
-        </button>
-      </div>
+      <button 
+        className="w-5 h-5 rounded hover:bg-orange-400 flex items-center justify-center text-xs"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete && onDelete(id);
+        }}
+      >
+        <i className="ri-close-line"></i>
+      </button>
     </div>
-    <div className="p-3 text-sm bg-white rounded-b-lg flex flex-col items-center">
-      <div className="flex items-center w-full justify-between py-2">
-        <Handle 
-          type="target" 
-          position={Position.Left} 
-          id="input" 
-          style={handleStyle}
-        />
-        <Handle 
-          type="source" 
-          position={Position.Right} 
-          id="output" 
-          style={handleStyle}
-        />
-      </div>
-    </div>
+    <Handle 
+      type="target" 
+      position={Position.Left} 
+      id="input" 
+      style={handleStyle}
+    />
+    <Handle 
+      type="source" 
+      position={Position.Right} 
+      id="output" 
+      style={handleStyle}
+    />
   </div>
 );
 
 const OutputNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
-  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#10B981', minWidth: '120px' }}>
+  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#10B981', minWidth: '100px' }}>
     <div className="bg-plugin-output text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#10B981' }}>
       <span>{data.plugin}</span>
-      <div className="flex space-x-1">
-        <button 
-          className="w-5 h-5 rounded hover:bg-emerald-400 flex items-center justify-center text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            // This button is just for show, no action needed
-          }}
-        >
-          <i className="ri-settings-4-line"></i>
-        </button>
-        <button 
-          className="w-5 h-5 rounded hover:bg-emerald-400 flex items-center justify-center text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete && onDelete(id);
-          }}
-        >
-          <i className="ri-close-line"></i>
-        </button>
-      </div>
+      <button 
+        className="w-5 h-5 rounded hover:bg-emerald-400 flex items-center justify-center text-xs"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete && onDelete(id);
+        }}
+      >
+        <i className="ri-close-line"></i>
+      </button>
     </div>
-    <div className="p-3 text-sm bg-white rounded-b-lg flex flex-col items-center">
-      <div className="flex items-center justify-start w-full py-2">
-        <Handle 
-          type="target" 
-          position={Position.Left} 
-          id="input" 
-          style={handleStyle}
-        />
-      </div>
-    </div>
+    <Handle 
+      type="target" 
+      position={Position.Left} 
+      id="input" 
+      style={handleStyle}
+    />
   </div>
 );
 
@@ -307,8 +262,8 @@ const EditorCanvas = () => {
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          width: 20,
-          height: 20,
+          width: 14,
+          height: 14,
           color: '#555'
         },
       };
