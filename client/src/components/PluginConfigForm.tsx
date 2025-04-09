@@ -60,27 +60,45 @@ export function PluginConfigForm({
   };
 
   const renderFieldInput = (field: PluginField) => {
+    console.log(`Rendering field: ${field.name}, required: ${field.required}, description: ${field.description}`);
     const value = data[field.name] !== undefined ? data[field.name] : field.default;
     
     switch (field.type) {
       case 'boolean':
         return (
-          <div className="flex items-center space-x-2" key={field.name}>
-            <Checkbox
-              id={field.name}
-              checked={!!value}
-              onCheckedChange={(checked) => handleChange(field, checked)}
-            />
-            <Label htmlFor={field.name} className="text-sm font-medium text-gray-700">
-              {field.name}
-            </Label>
+          <div className="space-y-1" key={field.name}>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={field.name}
+                checked={!!value}
+                onCheckedChange={(checked) => handleChange(field, checked)}
+              />
+              <Label 
+                htmlFor={field.name} 
+                className={cn(
+                  "text-sm font-medium",
+                  field.required ? "text-gray-700 after:content-['*'] after:ml-0.5 after:text-red-500" : "text-gray-700"
+                )}
+              >
+                {field.name}
+              </Label>
+            </div>
+            {field.description && (
+              <p className="text-xs text-gray-500 mt-1 ml-6">{field.description}</p>
+            )}
           </div>
         );
         
       case 'array':
         return (
           <div className="space-y-1" key={field.name}>
-            <Label htmlFor={field.name} className="text-sm font-medium text-gray-700">
+            <Label 
+              htmlFor={field.name} 
+              className={cn(
+                "text-sm font-medium",
+                field.required ? "text-gray-700 after:content-['*'] after:ml-0.5 after:text-red-500" : "text-gray-700"
+              )}
+            >
               {field.name}
             </Label>
             <Textarea
@@ -90,13 +108,22 @@ export function PluginConfigForm({
               className="w-full font-mono text-sm"
               rows={3}
             />
+            {field.description && (
+              <p className="text-xs text-gray-500 mt-1">{field.description}</p>
+            )}
           </div>
         );
         
       case 'object':
         return (
           <div className="space-y-1" key={field.name}>
-            <Label htmlFor={field.name} className="text-sm font-medium text-gray-700">
+            <Label 
+              htmlFor={field.name} 
+              className={cn(
+                "text-sm font-medium",
+                field.required ? "text-gray-700 after:content-['*'] after:ml-0.5 after:text-red-500" : "text-gray-700"
+              )}
+            >
               {field.name}
             </Label>
             <Textarea
@@ -106,6 +133,9 @@ export function PluginConfigForm({
               className="w-full font-mono text-sm"
               rows={4}
             />
+            {field.description && (
+              <p className="text-xs text-gray-500 mt-1">{field.description}</p>
+            )}
           </div>
         );
         
@@ -146,10 +176,44 @@ export function PluginConfigForm({
     }
   };
 
+  // Function to get the GitHub documentation URL for the plugin
+  const getGitHubDocsUrl = () => {
+    const pluginType = pluginConfig.type === 'input' ? 'inputs' : 
+                      pluginConfig.type === 'output' ? 'outputs' : 
+                      pluginConfig.type === 'processor' ? 'processors' : 'aggregators';
+    
+    return `https://github.com/influxdata/telegraf/tree/master/plugins/${pluginType}/${pluginConfig.name}`;
+  };
+
   return (
     <div className="space-y-6">
       <div className="border-b border-gray-200 pb-2">
-        <h3 className="text-lg font-medium">{pluginConfig.displayName}</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">{pluginConfig.displayName}</h3>
+          <a 
+            href={getGitHubDocsUrl()} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:text-blue-700 text-sm flex items-center"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              className="mr-1"
+            >
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            View Docs
+          </a>
+        </div>
         <p className="text-sm text-gray-500">{pluginConfig.description}</p>
       </div>
       
