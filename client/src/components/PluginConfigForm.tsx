@@ -21,9 +21,12 @@ export function PluginConfigForm({
   onChange, 
   onSave 
 }: PluginConfigFormProps) {
+  console.log("PluginConfigForm rendered with:", pluginConfig);
+  
   const [data, setData] = useState<Record<string, any>>(currentValues);
 
   useEffect(() => {
+    console.log("PluginConfigForm currentValues updated:", currentValues);
     setData(currentValues);
   }, [currentValues]);
 

@@ -25,10 +25,12 @@ export default function NodeConfig({ node }: NodeConfigProps) {
   useEffect(() => {
     setNodeData({ ...node.data });
     loadPluginConfig();
+    console.log("Selected node:", node);
   }, [node]);
 
   const loadPluginConfig = async () => {
     setLoading(true);
+    console.log("Loading plugin config for:", node.plugin, node.type);
     
     try {
       // Get the node type (input, output, processor)
@@ -38,6 +40,7 @@ export default function NodeConfig({ node }: NodeConfigProps) {
       // For demo purposes, use the predefined config for influxdb_v2
       // In production, we would fetch this from GitHub or a local cache
       if (node.plugin === 'influxdb_v2') {
+        console.log("Processing influxdb_v2 config");
         const sampleConfig = `# Configuration for sending metrics to InfluxDB 2.0
 [[outputs.influxdb_v2]]
   # The URLs of the InfluxDB cluster nodes.

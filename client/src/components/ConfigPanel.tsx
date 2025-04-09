@@ -10,10 +10,7 @@ export default function ConfigPanel() {
   // Determine which configuration component to render
   const renderConfigComponent = () => {
     if (selectedNode) {
-      // Check if this is a plugin that supports secrets (like influxdb_v2)
-      if (selectedNode.plugin === 'influxdb_v2') {
-        return <SecretConfig node={selectedNode} />;
-      }
+      // For testing our new NodeConfig with the parser, let's show it for all plugins
       return <NodeConfig node={selectedNode} />;
     }
 
