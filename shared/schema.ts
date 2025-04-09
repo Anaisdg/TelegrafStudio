@@ -53,9 +53,9 @@ export const connectionSchema = z.object({
 
 // Define the Secret Store schema
 export const secretStoreSchema = z.object({
-  id: z.string(),
-  type: z.string(),
-  data: z.record(z.any()).optional()
+  plugin: z.string(),
+  config: z.record(z.any()),
+  secrets: z.record(z.string()).optional()
 });
 
 // Define the Agent Configuration schema
@@ -84,6 +84,7 @@ export const telegrafConfigSchema = z.object({
   agent: agentConfigSchema,
   nodes: z.array(nodeSchema),
   connections: z.array(connectionSchema),
+  secretStore: secretStoreSchema.optional(),
   secretStores: z.array(secretStoreSchema).optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional()

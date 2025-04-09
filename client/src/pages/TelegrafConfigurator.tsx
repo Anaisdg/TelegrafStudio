@@ -7,7 +7,7 @@ import ConfigPanel from "@/components/ConfigPanel";
 import TomlEditor from "@/components/TomlEditor";
 import { useTelegrafConfig } from "@/hooks/TelegrafContext";
 import { apiRequest } from "@/lib/queryClient";
-import { TelegrafConfigRecord } from "@shared/schema";
+import { TelegrafConfigRecord, TelegrafConfig } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -71,7 +71,7 @@ export default function TelegrafConfigurator() {
   useEffect(() => {
     if (data && data.length > 0) {
       const config = data[0];
-      setTelegrafConfig(config.config);
+      setTelegrafConfig(config.config as TelegrafConfig);
       setConfigName(config.name);
     }
   }, [data]);
@@ -106,21 +106,40 @@ export default function TelegrafConfigurator() {
               onChange={(e) => setConfigName(e.target.value)}
             />
           </div>
-          <Button 
-            variant="outline" 
-            className="bg-gray-700 hover:bg-gray-600 text-white"
-            onClick={() => {
-              setSelectedNode(null);
-              setSelectedConnection(null);
-              document.getElementById('agent-config')?.classList.remove('hidden');
-              document.getElementById('node-config')?.classList.add('hidden');
-              document.getElementById('connection-config')?.classList.add('hidden');
-              document.getElementById('secret-config')?.classList.add('hidden');
-              document.getElementById('empty-config')?.classList.add('hidden');
-            }}
-          >
-            <i className="ri-settings-3-line mr-1"></i> Agent Settings
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              className="bg-gray-700 hover:bg-gray-600 text-white"
+              onClick={() => {
+                setSelectedNode(null);
+                setSelectedConnection(null);
+                document.getElementById('agent-config')?.classList.remove('hidden');
+                document.getElementById('secret-store-config')?.classList.add('hidden');
+                document.getElementById('node-config')?.classList.add('hidden');
+                document.getElementById('connection-config')?.classList.add('hidden');
+                document.getElementById('secret-config')?.classList.add('hidden');
+                document.getElementById('empty-config')?.classList.add('hidden');
+              }}
+            >
+              <i className="ri-settings-3-line mr-1"></i> Agent Settings
+            </Button>
+            <Button 
+              variant="outline" 
+              className="bg-gray-700 hover:bg-gray-600 text-white"
+              onClick={() => {
+                setSelectedNode(null);
+                setSelectedConnection(null);
+                document.getElementById('agent-config')?.classList.add('hidden');
+                document.getElementById('secret-store-config')?.classList.remove('hidden');
+                document.getElementById('node-config')?.classList.add('hidden');
+                document.getElementById('connection-config')?.classList.add('hidden');
+                document.getElementById('secret-config')?.classList.add('hidden');
+                document.getElementById('empty-config')?.classList.add('hidden');
+              }}
+            >
+              <i className="ri-key-2-line mr-1"></i> Secret Store
+            </Button>
+          </div>
           <Button 
             variant="default" 
             className="bg-blue-600 hover:bg-blue-500"

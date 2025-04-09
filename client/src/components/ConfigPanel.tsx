@@ -3,6 +3,7 @@ import NodeConfig from '@/components/NodeConfig';
 import ConnectionConfig from '@/components/ConnectionConfig';
 import AgentConfig from '@/components/AgentConfig';
 import SecretConfig from '@/components/SecretConfig';
+import SecretStoreConfig from '@/components/SecretStoreConfig';
 
 export default function ConfigPanel() {
   const { selectedNode, selectedConnection } = useTelegrafConfig();
@@ -28,6 +29,10 @@ export default function ConfigPanel() {
         
         <div className="hidden" id="agent-config">
           <AgentConfig />
+        </div>
+        
+        <div className="hidden" id="secret-store-config">
+          <SecretStoreConfig />
         </div>
       </>
     );
