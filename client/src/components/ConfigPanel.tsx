@@ -7,6 +7,15 @@ import SecretStoreConfig from '@/components/SecretStoreConfig';
 
 export default function ConfigPanel() {
   const { selectedNode, selectedConnection } = useTelegrafConfig();
+  
+  // Check which section is active based on ID visibility
+  const isSecretStoreActive = () => {
+    return document.getElementById('secret-store-config')?.classList.contains('block');
+  };
+  
+  const isAgentConfigActive = () => {
+    return document.getElementById('agent-config')?.classList.contains('block');
+  };
 
   // Determine which configuration component to render
   const renderConfigComponent = () => {
@@ -18,23 +27,23 @@ export default function ConfigPanel() {
     if (selectedConnection) {
       return <ConnectionConfig connection={selectedConnection} />;
     }
+    
+    // Check if secret store is meant to be shown
+    if (document.getElementById('secret-store-config')?.className.indexOf('block') !== -1) {
+      return <SecretStoreConfig />;
+    }
+    
+    // Check if agent config is meant to be shown
+    if (document.getElementById('agent-config')?.className.indexOf('block') !== -1) {
+      return <AgentConfig />;
+    }
 
-    // Default render the agent config if nothing is selected
+    // Default empty state
     return (
-      <>
-        <div className="text-center text-gray-500 py-10" id="empty-config">
-          <i className="ri-information-line text-4xl mb-2"></i>
-          <p>Select a node or connection to configure</p>
-        </div>
-        
-        <div className="hidden" id="agent-config">
-          <AgentConfig />
-        </div>
-        
-        <div className="hidden" id="secret-store-config">
-          <SecretStoreConfig />
-        </div>
-      </>
+      <div className="text-center text-gray-500 py-10">
+        <i className="ri-information-line text-4xl mb-2"></i>
+        <p>Select a node or connection to configure</p>
+      </div>
     );
   };
 
@@ -46,6 +55,12 @@ export default function ConfigPanel() {
     if (selectedConnection) {
       return 'Connection Filter';
     }
+    if (document.getElementById('secret-store-config')?.className.indexOf('block') !== -1) {
+      return 'Secret Store Configuration';
+    }
+    if (document.getElementById('agent-config')?.className.indexOf('block') !== -1) {
+      return 'Agent Configuration';
+    }
     return 'Plugin Configuration';
   };
 
@@ -56,6 +71,12 @@ export default function ConfigPanel() {
     }
     if (selectedConnection) {
       return `${selectedConnection.source} → ${selectedConnection.target}`;
+    }
+    if (document.getElementById('secret-store-config')?.className.indexOf('block') !== -1) {
+      return 'Configure secret store and manage secrets';
+    }
+    if (document.getElementById('agent-config')?.className.indexOf('block') !== -1) {
+      return 'Global Telegraf agent settings';
     }
     return 'Select a plugin to configure';
   };

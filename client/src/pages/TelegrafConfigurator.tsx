@@ -114,6 +114,8 @@ export default function TelegrafConfigurator() {
                 setSelectedNode(null);
                 setSelectedConnection(null);
                 document.getElementById('agent-config')?.classList.remove('hidden');
+                document.getElementById('agent-config')?.classList.add('block');
+                document.getElementById('secret-store-config')?.classList.remove('block');
                 document.getElementById('secret-store-config')?.classList.add('hidden');
                 document.getElementById('node-config')?.classList.add('hidden');
                 document.getElementById('connection-config')?.classList.add('hidden');
@@ -129,8 +131,10 @@ export default function TelegrafConfigurator() {
               onClick={() => {
                 setSelectedNode(null);
                 setSelectedConnection(null);
+                document.getElementById('agent-config')?.classList.remove('block');
                 document.getElementById('agent-config')?.classList.add('hidden');
                 document.getElementById('secret-store-config')?.classList.remove('hidden');
+                document.getElementById('secret-store-config')?.classList.add('block');
                 document.getElementById('node-config')?.classList.add('hidden');
                 document.getElementById('connection-config')?.classList.add('hidden');
                 document.getElementById('secret-config')?.classList.add('hidden');
