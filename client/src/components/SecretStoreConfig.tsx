@@ -320,10 +320,25 @@ export default function SecretStoreConfig() {
       </div>
       
       <Tabs defaultValue="configuration" className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="configuration">Secret Store Setup</TabsTrigger>
-          <TabsTrigger value="secrets">Manage Secrets</TabsTrigger>
-          <TabsTrigger value="command">Command Line</TabsTrigger>
+        <TabsList className="flex w-full mb-4 space-x-1 rounded-md bg-gray-100 p-1">
+          <TabsTrigger 
+            value="configuration" 
+            className="flex-1 rounded-sm py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+          >
+            Secret Store Setup
+          </TabsTrigger>
+          <TabsTrigger 
+            value="secrets"
+            className="flex-1 rounded-sm py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+          >
+            Manage Secrets
+          </TabsTrigger>
+          <TabsTrigger 
+            value="command"
+            className="flex-1 rounded-sm py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+          >
+            Command Line
+          </TabsTrigger>
         </TabsList>
         
         {/* Secret Store Configuration Tab */}
