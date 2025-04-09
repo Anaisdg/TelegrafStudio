@@ -154,7 +154,7 @@ export function PluginConfigForm({
             <div className="relative">
               <Input
                 id={field.name}
-                type={field.type === 'number' ? 'number' : 'text'}
+                type={field.type === 'number' ? 'number' : (field.sensitive ? 'password' : 'text')}
                 value={value}
                 onChange={(e) => handleChange(field, e.target.value)}
                 className={cn(
@@ -162,9 +162,19 @@ export function PluginConfigForm({
                   field.sensitive ? "font-mono" : ""
                 )}
               />
-              {field.sensitive && (
+              {/* Only show the secret indicator for fields explicitly marked as sensitive */}
+              {field.sensitive && String(value).startsWith('@{') && (
                 <div className="absolute top-0 right-0 h-full flex items-center pr-2">
-                  <span className="text-xs text-blue-600 bg-blue-50 px-1 py-0.5 rounded">secret</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xs text-blue-600 bg-blue-50 px-1 py-0.5 rounded cursor-help">secret ref</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">References a secret from the secret store</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               )}
             </div>
