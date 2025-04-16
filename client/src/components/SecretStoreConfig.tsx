@@ -237,12 +237,27 @@ export default function SecretStoreConfig() {
     });
   };
   
+  // Update a secret key name
+  const handleSecretKeyChange = (oldKey: string, newKey: string) => {
+    // Only update if the key has actually changed
+    if (oldKey === newKey) return;
+    
+    const newSecrets = { ...secrets };
+    const value = newSecrets[oldKey];
+    delete newSecrets[oldKey];
+    newSecrets[newKey] = value;
+    setSecrets(newSecrets);
+  };
+  
   // Remove a secret
   const handleRemoveSecret = (key: string) => {
     const newSecrets = { ...secrets };
     delete newSecrets[key];
     setSecrets(newSecrets);
   };
+  
+  // State for toggling secret visibility
+  const [visibleSecrets, setVisibleSecrets] = useState<Record<string, boolean>>({});
   
   // Generate a sample command for using this secret store
   const generateCommandLine = () => {
@@ -450,24 +465,37 @@ export default function SecretStoreConfig() {
                   <div key={key} className="flex items-center space-x-2">
                     <Input
                       value={key}
-                      onChange={(e) => {
-                        const newSecrets = { ...secrets };
-                        delete newSecrets[key];
-                        newSecrets[e.target.value] = value;
-                        setSecrets(newSecrets);
-                      }}
+                      onChange={(e) => handleSecretKeyChange(key, e.target.value)}
                       className="flex-1"
                       placeholder="Secret key name"
                     />
                     <div className="flex-1 relative">
                       <Input
-                        type="password"
+                        type={visibleSecrets[key] ? "text" : "password"}
                         value={value}
                         onChange={(e) => handleSecretChange(key, e.target.value)}
-                        className="w-full font-mono"
+                        className="w-full font-mono pr-16"
                         placeholder="Secret value"
                       />
-                      <div className="absolute top-0 right-0 h-full flex items-center pr-2">
+                      <div className="absolute top-0 right-0 h-full flex items-center gap-2 pr-2">
+                        <button 
+                          type="button"
+                          onClick={() => setVisibleSecrets({...visibleSecrets, [key]: !visibleSecrets[key]})}
+                          className="text-gray-500 hover:text-blue-600 focus:outline-none"
+                          aria-label={visibleSecrets[key] ? "Hide secret" : "Show secret"}
+                        >
+                          {visibleSecrets[key] ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"></path>
+                              <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                              <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                          )}
+                        </button>
                         <span className="text-xs text-blue-600 bg-blue-50 px-1 py-0.5 rounded">secret</span>
                       </div>
                     </div>
