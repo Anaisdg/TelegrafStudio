@@ -370,7 +370,7 @@ export default function SecretStoreConfig() {
           {/* Dynamic fields based on selected secret store */}
           {selectedPlugin && (
             <div className="space-y-4 pt-2">
-              {selectedPlugin.fields.map(field => (
+              {selectedPlugin.fields.filter(field => field.name !== "secrets").map(field => (
                 <div key={field.name} className="space-y-1">
                   <Label 
                     htmlFor={field.name} 
@@ -505,9 +505,9 @@ export default function SecretStoreConfig() {
               <h4 className="text-sm font-medium mb-2">How to reference these secrets</h4>
               <div className="space-y-2">
                 {Object.keys(secrets).map(key => (
-                  <div key={key} className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">{key}:</span>
-                    <code className="bg-gray-200 px-2 py-1 rounded text-sm font-mono">
+                  <div key={key} className="grid grid-cols-[120px_1fr] gap-2 items-center">
+                    <span className="text-sm text-gray-600 truncate">{key}:</span>
+                    <code className="bg-gray-200 px-2 py-1 rounded text-sm font-mono overflow-x-auto whitespace-nowrap">
                       {generateSecretReference(key)}
                     </code>
                   </div>
