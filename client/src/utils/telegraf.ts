@@ -20,13 +20,30 @@ export function convertConfigToToml(config: TelegrafConfig): string {
     }
   });
 
-  // Add secret stores
-  if (config.secretStores && config.secretStores.length > 0) {
-    toml += '\n';
-    config.secretStores.forEach(store => {
-      toml += `[[secretstores.${store.type}]]\n`;
-      toml += `  # Using OS secret store\n`;
-    });
+  // Add secret store
+  if (config.secretStore) {
+    toml += '\n# Secret Store Configuration\n';
+    toml += `[[secretstores.${config.secretStore.plugin}]]\n`;
+    
+    // Add secret store config
+    if (config.secretStore.config) {
+      Object.entries(config.secretStore.config).forEach(([key, value]) => {
+        if (typeof value === 'string') {
+          toml += `  ${key} = "${value}"\n`;
+        } else if (value !== undefined && value !== null) {
+          toml += `  ${key} = ${value}\n`;
+        }
+      });
+    }
+    
+    // Add secrets if they exist (commented as sensitive information)
+    if (config.secretStore.secrets && Object.keys(config.secretStore.secrets).length > 0) {
+      toml += '\n  # Secrets (managed by secret store)\n';
+      toml += '  # The following secrets are available for reference using @{store_id:secret_key} syntax:\n';
+      Object.keys(config.secretStore.secrets).forEach(key => {
+        toml += `  # - ${key}\n`;
+      });
+    }
   }
 
   // Group nodes by plugin type
