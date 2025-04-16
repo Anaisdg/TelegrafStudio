@@ -181,15 +181,15 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
   };
 
   return (
-    <div className="bg-white text-gray-800 flex flex-col h-full w-48">
+    <div className="bg-white text-gray-800 flex flex-col h-full w-48 overflow-hidden">
       {/* Panel Header */}
-      <div className="p-2 border-b border-gray-200 bg-gray-50">
+      <div className="p-2 border-b border-gray-200 bg-gray-50 flex-shrink-0">
         <h2 className="font-bold text-base mb-0.5">Plugin Categories</h2>
         <p className="text-xs text-gray-600">Select a category to add a plugin</p>
       </div>
 
       {/* Plugin Categories */}
-      <div className="p-2">
+      <div className="p-2 flex-shrink-0">
         <div className="space-y-1">
           {renderCategoryButton(PluginType.INPUT, 'Inputs')}
           {renderCategoryButton(PluginType.PROCESSOR, 'Processors')}
@@ -200,7 +200,7 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
       </div>
       
       {/* Recent Plugins */}
-      <div className="mt-2 p-2 border-t border-gray-200">
+      <div className="mt-2 p-2 border-t border-gray-200 flex-shrink-0">
         <h3 className="font-semibold text-xs mb-1.5 text-gray-700">Recent Plugins</h3>
         <div className="space-y-1">
           {recentPlugins.map((plugin, index) => {
@@ -229,11 +229,11 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
         </div>
       </div>
       
-      {/* Spacer */}
-      <div className="flex-1"></div>
+      {/* Auto-fill remaining space */}
+      <div className="mt-auto"></div>
       
       {/* Toggle TOML Button */}
-      <div className="p-2 border-t border-gray-200 bg-gray-50">
+      <div className="p-2 border-t border-gray-200 bg-gray-50 flex-shrink-0">
         <Button
           variant="outline"
           className="w-full px-2 py-1.5 rounded text-xs border-blue-500 hover:bg-blue-50"
