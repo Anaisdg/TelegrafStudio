@@ -208,22 +208,23 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
             if (!pluginInfo) return null;
             
             return (
-              <div 
+              <Button
                 key={index}
-                className="flex items-center py-1 px-1.5 hover:bg-gray-50 rounded cursor-pointer border-l-3 group text-xs"
+                variant="outline"
+                className="w-full h-10 mb-1.5 px-1 flex items-center border-l-4 transition-all hover:bg-gray-50"
                 style={{ borderLeftColor: getColorForPluginType(plugin.type) }}
                 draggable
                 onDragStart={(e) => onDragStart(e, plugin.type, plugin.name)}
                 onClick={() => addNodeToCanvas(plugin.type, plugin.name)}
               >
+                <span className="font-medium ml-1 flex-1 text-left truncate">{plugin.name}</span>
                 <div
-                  className="w-4 h-4 mr-1.5 rounded flex items-center justify-center text-white"
+                  className="w-4 h-4 rounded flex items-center justify-center text-white ml-auto"
                   style={{ backgroundColor: getColorForPluginType(plugin.type) }}
                 >
                   <i className={`ri-${pluginInfo.icon} text-xs`}></i>
                 </div>
-                <div className="font-medium flex-1 truncate">{plugin.name}</div>
-              </div>
+              </Button>
             );
           })}
         </div>
