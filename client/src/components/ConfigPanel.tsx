@@ -107,7 +107,7 @@ export default function ConfigPanel() {
   };
 
   return (
-    <div className="w-80 bg-white border-l border-gray-200 flex flex-col" id="config-panel">
+    <div className="w-full h-full bg-white border-l border-gray-200 flex flex-col" id="config-panel">
       {/* Configuration Title */}
       <div className="bg-gray-100 p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold" id="config-title">

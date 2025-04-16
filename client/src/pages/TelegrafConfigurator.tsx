@@ -10,6 +10,11 @@ import { apiRequest } from "@/lib/queryClient";
 import { TelegrafConfigRecord, TelegrafConfig } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup
+} from "@/components/ui/resizable";
 
 export default function TelegrafConfigurator() {
   const [activeTab, setActiveTab] = useState<"visual" | "toml">("visual");
@@ -167,39 +172,54 @@ export default function TelegrafConfigurator() {
 
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Panel */}
-        <PluginPanel
-          onToggleToml={() => setActiveTab(activeTab === "visual" ? "toml" : "visual")}
-        />
+        {/* Import react-resizable-panels directly */}
+        <div className="w-full h-full">
+          <ResizablePanelGroup direction="horizontal" className="w-full h-full">
+            {/* Left Panel (Plugin Panel) - takes 15% of space */}
+            <ResizablePanel defaultSize={15} minSize={12} className="relative">
+              <PluginPanel
+                onToggleToml={() => setActiveTab(activeTab === "visual" ? "toml" : "visual")}
+              />
+            </ResizablePanel>
 
-        {/* Center Area - Canvas and TOML Editor */}
-        <div className="flex-1 flex flex-col">
-          {/* Tabs for Visual/TOML */}
-          <div className="bg-gray-200 border-b border-gray-300 flex">
-            <button 
-              className={`px-4 py-2 font-medium ${activeTab === "visual" ? "bg-white text-blue-600 border-t-2 border-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
-              onClick={() => setActiveTab("visual")}
-            >
-              Visual Editor
-            </button>
-            <button 
-              className={`px-4 py-2 font-medium ${activeTab === "toml" ? "bg-white text-blue-600 border-t-2 border-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
-              onClick={() => setActiveTab("toml")}
-            >
-              TOML Editor
-            </button>
-          </div>
-          
-          {/* Visual Editor */}
-          {activeTab === "visual" ? (
-            <EditorCanvas />
-          ) : (
-            <TomlEditor />
-          )}
+            {/* Divider */}
+            <ResizableHandle className="w-1.5 bg-gray-200 hover:bg-gray-300 transition-colors duration-200" />
+
+            {/* Center Area - Canvas and TOML Editor - takes 60% of space */}
+            <ResizablePanel defaultSize={60} className="flex flex-col">
+              {/* Tabs for Visual/TOML */}
+              <div className="bg-gray-200 border-b border-gray-300 flex">
+                <button 
+                  className={`px-4 py-2 font-medium ${activeTab === "visual" ? "bg-white text-blue-600 border-t-2 border-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
+                  onClick={() => setActiveTab("visual")}
+                >
+                  Visual Editor
+                </button>
+                <button 
+                  className={`px-4 py-2 font-medium ${activeTab === "toml" ? "bg-white text-blue-600 border-t-2 border-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
+                  onClick={() => setActiveTab("toml")}
+                >
+                  TOML Editor
+                </button>
+              </div>
+              
+              {/* Visual Editor */}
+              {activeTab === "visual" ? (
+                <EditorCanvas />
+              ) : (
+                <TomlEditor />
+              )}
+            </ResizablePanel>
+
+            {/* Divider */}
+            <ResizableHandle className="w-1.5 bg-gray-200 hover:bg-gray-300 transition-colors duration-200" />
+
+            {/* Right Panel - Config Panel - takes 25% of space and can be resized */}
+            <ResizablePanel defaultSize={25} minSize={20} maxSize={40} className="relative">
+              <ConfigPanel />
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </div>
-
-        {/* Right Panel */}
-        <ConfigPanel />
       </div>
     </div>
   );
