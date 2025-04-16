@@ -172,21 +172,18 @@ export default function TelegrafConfigurator() {
 
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Import react-resizable-panels directly */}
-        <div className="w-full h-full">
+        {/* Left Panel - Fixed width */}
+        <div className="w-60 border-r border-gray-200 flex-shrink-0">
+          <PluginPanel
+            onToggleToml={() => setActiveTab(activeTab === "visual" ? "toml" : "visual")}
+          />
+        </div>
+
+        {/* Center & Right Panels - Resizable */}
+        <div className="flex-1 h-full">
           <ResizablePanelGroup direction="horizontal" className="w-full h-full">
-            {/* Left Panel (Plugin Panel) - takes 15% of space */}
-            <ResizablePanel defaultSize={15} minSize={12} className="relative">
-              <PluginPanel
-                onToggleToml={() => setActiveTab(activeTab === "visual" ? "toml" : "visual")}
-              />
-            </ResizablePanel>
-
-            {/* Divider */}
-            <ResizableHandle className="w-1.5 bg-gray-200 hover:bg-gray-300 transition-colors duration-200" />
-
-            {/* Center Area - Canvas and TOML Editor - takes 60% of space */}
-            <ResizablePanel defaultSize={60} className="flex flex-col">
+            {/* Center Area - Canvas and TOML Editor */}
+            <ResizablePanel defaultSize={70} minSize={50} className="flex flex-col">
               {/* Tabs for Visual/TOML */}
               <div className="bg-gray-200 border-b border-gray-300 flex">
                 <button 
@@ -203,7 +200,7 @@ export default function TelegrafConfigurator() {
                 </button>
               </div>
               
-              {/* Visual Editor */}
+              {/* Visual or TOML Editor */}
               {activeTab === "visual" ? (
                 <EditorCanvas />
               ) : (
@@ -212,10 +209,13 @@ export default function TelegrafConfigurator() {
             </ResizablePanel>
 
             {/* Divider */}
-            <ResizableHandle className="w-1.5 bg-gray-200 hover:bg-gray-300 transition-colors duration-200" />
+            <ResizableHandle 
+              withHandle
+              className="bg-gray-200 transition-colors duration-200 hover:bg-gray-300" 
+            />
 
-            {/* Right Panel - Config Panel - takes 25% of space and can be resized */}
-            <ResizablePanel defaultSize={25} minSize={20} maxSize={40} className="relative">
+            {/* Right Panel - Config Panel - resizable */}
+            <ResizablePanel defaultSize={30} minSize={25} maxSize={50} className="relative">
               <ConfigPanel />
             </ResizablePanel>
           </ResizablePanelGroup>

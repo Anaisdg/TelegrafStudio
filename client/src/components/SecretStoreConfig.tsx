@@ -320,24 +320,24 @@ export default function SecretStoreConfig() {
       </div>
       
       <Tabs defaultValue="configuration" className="w-full">
-        <TabsList className="flex w-full mb-4 space-x-1 rounded-md bg-gray-100 p-1">
+        <TabsList className="flex mb-4 bg-gray-200 border-b border-gray-300 overflow-hidden">
           <TabsTrigger 
             value="configuration" 
-            className="flex-1 rounded-sm py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+            className="flex-1 px-3 py-2 text-sm font-medium border-r border-gray-300 transition-colors data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-0 data-[state=active]:border-t-2 data-[state=active]:border-t-blue-600 data-[state=inactive]:hover:bg-gray-100"
           >
-            Secret Store Setup
+            Setup
           </TabsTrigger>
           <TabsTrigger 
             value="secrets"
-            className="flex-1 rounded-sm py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+            className="flex-1 px-3 py-2 text-sm font-medium border-r border-gray-300 transition-colors data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-0 data-[state=active]:border-t-2 data-[state=active]:border-t-blue-600 data-[state=inactive]:hover:bg-gray-100"
           >
-            Manage Secrets
+            Secrets
           </TabsTrigger>
           <TabsTrigger 
             value="command"
-            className="flex-1 rounded-sm py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+            className="flex-1 px-3 py-2 text-sm font-medium transition-colors data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-0 data-[state=active]:border-t-2 data-[state=active]:border-t-blue-600 data-[state=inactive]:hover:bg-gray-100"
           >
-            Command Line
+            Command
           </TabsTrigger>
         </TabsList>
         
