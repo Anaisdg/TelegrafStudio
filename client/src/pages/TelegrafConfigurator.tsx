@@ -173,7 +173,7 @@ export default function TelegrafConfigurator() {
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Fixed width */}
-        <div className="w-60 border-r border-gray-200 flex-shrink-0">
+        <div className="border-r border-gray-200 flex-shrink-0">
           <PluginPanel
             onToggleToml={() => setActiveTab(activeTab === "visual" ? "toml" : "visual")}
           />
