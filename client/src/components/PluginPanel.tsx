@@ -78,14 +78,51 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
     }
   };
 
+  // Function to directly add a node to the canvas using ReactFlow
+  const addNodeToCanvas = (pluginType: string, pluginName: string) => {
+    // Get the center of the canvas
+    const canvasElement = document.querySelector('.react-flow__viewport');
+    if (!canvasElement) return;
+    
+    // Calculate position - we'll add nodes at staggered positions
+    const basePos = { x: 200, y: 150 };
+    const existingNodes = document.querySelectorAll('.react-flow__node').length;
+    const position = {
+      x: basePos.x + (existingNodes % 3) * 50, 
+      y: basePos.y + Math.floor(existingNodes / 3) * 100
+    };
+    
+    // Create a synthetic event to trigger node addition
+    const customEvent = new CustomEvent('telegraf-add-node', {
+      detail: { type: pluginType, plugin: pluginName, position }
+    });
+    
+    // Dispatch the event
+    window.dispatchEvent(customEvent);
+    
+    // Close the dialog
+    setShowDialog(false);
+    
+    // Add to recent plugins
+    if (!recentPlugins.some(p => p.type === pluginType && p.name === pluginName)) {
+      const updatedRecents = [...recentPlugins];
+      if (updatedRecents.length >= 5) {
+        updatedRecents.pop();
+      }
+      updatedRecents.unshift({ type: pluginType, name: pluginName });
+      setRecentPlugins(updatedRecents);
+    }
+  };
+  
   const renderPluginItem = (pluginType: string, plugin: { name: string; description: string; icon: string }) => {
     return (
       <div
         key={`${pluginType}-${plugin.name}`}
-        className="plugin-item flex items-center p-3 hover:bg-gray-50 cursor-move border-l-4 border-b border-gray-100"
+        className="plugin-item flex items-center p-3 hover:bg-gray-50 cursor-pointer border-l-4 border-b border-gray-100 group"
         style={{ borderLeftColor: getColorForPluginType(pluginType) }}
         draggable
         onDragStart={(e) => onDragStart(e, pluginType, plugin.name)}
+        onClick={() => addNodeToCanvas(pluginType, plugin.name)}
       >
         <div
           className="w-8 h-8 mr-3 rounded flex items-center justify-center"
@@ -93,9 +130,14 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
         >
           <i className={`ri-${plugin.icon}`}></i>
         </div>
-        <div>
+        <div className="flex-1">
           <h3 className="font-medium text-gray-900">{plugin.name}</h3>
           <p className="text-xs text-gray-600">{plugin.description}</p>
+        </div>
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="bg-blue-500 text-white p-1 rounded">
+            <i className="ri-add-line"></i>
+          </div>
         </div>
       </div>
     );
@@ -157,6 +199,7 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
           {renderCategoryButton(PluginType.INPUT, 'Inputs')}
           {renderCategoryButton(PluginType.PROCESSOR, 'Processors')}
           {renderCategoryButton(PluginType.AGGREGATOR, 'Aggregators')}
+          {renderCategoryButton(PluginType.SERIALIZER, 'Serializers')}
           {renderCategoryButton(PluginType.OUTPUT, 'Outputs')}
         </div>
       </div>
@@ -172,10 +215,11 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
             return (
               <div 
                 key={index}
-                className="flex items-center p-2 hover:bg-gray-50 rounded cursor-move border-l-4"
+                className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer border-l-4 group"
                 style={{ borderLeftColor: getColorForPluginType(plugin.type) }}
                 draggable
                 onDragStart={(e) => onDragStart(e, plugin.type, plugin.name)}
+                onClick={() => addNodeToCanvas(plugin.type, plugin.name)}
               >
                 <div
                   className="w-6 h-6 mr-2 rounded flex items-center justify-center text-white"
@@ -183,7 +227,12 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
                 >
                   <i className={`ri-${pluginInfo.icon} text-xs`}></i>
                 </div>
-                <div className="text-sm font-medium">{plugin.name}</div>
+                <div className="text-sm font-medium flex-1">{plugin.name}</div>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="bg-blue-500 text-white p-1 rounded text-xs">
+                    <i className="ri-add-line"></i>
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -241,8 +290,11 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
             )}
           </ScrollArea>
           
-          <div className="text-sm text-gray-500 pt-2">
-            Drag a plugin to the canvas to add it to your pipeline.
+          <div className="text-sm text-gray-500 pt-2 flex items-center justify-center space-x-2">
+            <span>Click on a plugin to add it to the canvas or</span>
+            <span className="flex items-center">
+              <i className="ri-drag-move-line mr-1"></i> drag it
+            </span>
           </div>
         </DialogContent>
       </Dialog>

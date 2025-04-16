@@ -340,7 +340,41 @@ const EditorCanvas = () => {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
-
+  // Listen for custom add-node events from the plugin panel
+  useEffect(() => {
+    const handleAddNode = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { type, plugin, position } = customEvent.detail;
+      
+      if (!type || !plugin || !position) return;
+      
+      // Generate a unique ID for the new node
+      const nodeId = `${plugin}-${uuidv4().slice(0, 4)}`;
+      
+      // Create the telegraf config node
+      const telegrafNode = {
+        id: nodeId,
+        type: type as typeof PluginType[keyof typeof PluginType],
+        plugin: plugin,
+        position: position,
+        data: { ...getDefaultNodeData(plugin) },
+      };
+      
+      // Update the telegraf config with the new node
+      setTelegrafConfig({
+        ...telegrafConfig,
+        nodes: [...telegrafConfig.nodes, telegrafNode],
+      });
+    };
+    
+    // Add event listener
+    window.addEventListener('telegraf-add-node', handleAddNode);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('telegraf-add-node', handleAddNode);
+    };
+  }, [telegrafConfig, setTelegrafConfig]);
   
   return (
     <div className="flex-1 overflow-hidden relative" ref={reactFlowWrapper}>
