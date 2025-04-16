@@ -88,13 +88,14 @@ export function convertConfigToToml(config: TelegrafConfig): string {
         // Add node data
         if (node.data) {
           Object.entries(node.data).forEach(([key, value]) => {
-            if (typeof value === 'object' && value !== null) {
+            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
               // Handle nested objects like fields in converter
               toml += `  [${type}s.${node.plugin}.${key}]\n`;
               Object.entries(value).forEach(([subKey, subValue]) => {
                 toml += `    ${subKey} = ${JSON.stringify(subValue)}\n`;
               });
             } else if (Array.isArray(value)) {
+              // Properly format arrays 
               toml += `  ${key} = ${JSON.stringify(value)}\n`;
             } else if (typeof value === 'string') {
               toml += `  ${key} = "${value}"\n`;
