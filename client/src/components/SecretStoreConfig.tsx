@@ -237,16 +237,27 @@ export default function SecretStoreConfig() {
     });
   };
   
-  // Update a secret key name
-  const handleSecretKeyChange = (oldKey: string, newKey: string) => {
-    // Only update if the key has actually changed
-    if (oldKey === newKey) return;
-    
-    const newSecrets = { ...secrets };
-    const value = newSecrets[oldKey];
-    delete newSecrets[oldKey];
-    newSecrets[newKey] = value;
-    setSecrets(newSecrets);
+  // Keep track of the current secret key being edited
+  const [editingKey, setEditingKey] = useState<{
+    oldKey: string;
+    newKey: string;
+  } | null>(null);
+
+  // Handle when a secret key field changes
+  const handleSecretKeyInputChange = (oldKey: string, newValue: string) => {
+    setEditingKey({ oldKey, newKey: newValue });
+  };
+
+  // Only update the actual secret key when the input loses focus
+  const handleSecretKeyBlur = () => {
+    if (editingKey && editingKey.oldKey !== editingKey.newKey) {
+      const newSecrets = { ...secrets };
+      const value = newSecrets[editingKey.oldKey];
+      delete newSecrets[editingKey.oldKey];
+      newSecrets[editingKey.newKey] = value;
+      setSecrets(newSecrets);
+    }
+    setEditingKey(null);
   };
   
   // Remove a secret
@@ -464,8 +475,9 @@ export default function SecretStoreConfig() {
                 {Object.entries(secrets).map(([key, value]) => (
                   <div key={key} className="flex items-center space-x-2">
                     <Input
-                      value={key}
-                      onChange={(e) => handleSecretKeyChange(key, e.target.value)}
+                      value={editingKey && editingKey.oldKey === key ? editingKey.newKey : key}
+                      onChange={(e) => handleSecretKeyInputChange(key, e.target.value)}
+                      onBlur={handleSecretKeyBlur}
                       className="flex-1"
                       placeholder="Secret key name"
                     />
@@ -474,10 +486,10 @@ export default function SecretStoreConfig() {
                         type={visibleSecrets[key] ? "text" : "password"}
                         value={value}
                         onChange={(e) => handleSecretChange(key, e.target.value)}
-                        className="w-full font-mono pr-16"
+                        className="w-full font-mono pr-8"
                         placeholder="Secret value"
                       />
-                      <div className="absolute top-0 right-0 h-full flex items-center gap-2 pr-2">
+                      <div className="absolute top-0 right-0 h-full flex items-center gap-1 pr-2">
                         <button 
                           type="button"
                           onClick={() => setVisibleSecrets({...visibleSecrets, [key]: !visibleSecrets[key]})}
@@ -496,7 +508,6 @@ export default function SecretStoreConfig() {
                             </svg>
                           )}
                         </button>
-                        <span className="text-xs text-blue-600 bg-blue-50 px-1 py-0.5 rounded">secret</span>
                       </div>
                     </div>
                     <Button 
