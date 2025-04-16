@@ -170,17 +170,12 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
     return (
       <Button
         variant="outline"
-        className="w-full mb-2 h-20 flex flex-col items-center justify-center border-2 transition-all hover:border-blue-500"
-        style={{ borderColor: getColorForPluginType(type) }}
+        className="w-full mb-2 py-3 flex items-center justify-between border-l-4 transition-all hover:bg-gray-50"
+        style={{ borderLeftColor: getColorForPluginType(type) }}
         onClick={() => openPluginSelector(type)}
       >
-        <div 
-          className="w-10 h-10 rounded-full flex items-center justify-center mb-1 text-white"
-          style={{ backgroundColor: getColorForPluginType(type) }}
-        >
-          <i className={`ri-${getIconForPluginType(type)} text-xl`}></i>
-        </div>
-        <span className="text-sm font-medium">{label}</span>
+        <span className="text-sm font-medium ml-2">{label}</span>
+        <i className="ri-arrow-right-s-line mr-2"></i>
       </Button>
     );
   };
@@ -195,7 +190,7 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
 
       {/* Plugin Categories */}
       <div className="p-3">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
           {renderCategoryButton(PluginType.INPUT, 'Inputs')}
           {renderCategoryButton(PluginType.PROCESSOR, 'Processors')}
           {renderCategoryButton(PluginType.AGGREGATOR, 'Aggregators')}
