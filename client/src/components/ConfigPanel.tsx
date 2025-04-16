@@ -4,47 +4,72 @@ import ConnectionConfig from '@/components/ConnectionConfig';
 import AgentConfig from '@/components/AgentConfig';
 import SecretConfig from '@/components/SecretConfig';
 import SecretStoreConfig from '@/components/SecretStoreConfig';
+import { useEffect, useState } from 'react';
 
 export default function ConfigPanel() {
   const { selectedNode, selectedConnection } = useTelegrafConfig();
+  const [activePanel, setActivePanel] = useState<string | null>(null);
   
-  // Check which section is active based on ID visibility
-  const isSecretStoreActive = () => {
-    return document.getElementById('secret-store-config')?.classList.contains('block');
-  };
+  // Listen for telegraf-panel-change events
+  useEffect(() => {
+    const handlePanelChange = (e: CustomEvent) => {
+      setActivePanel(e.detail.panel);
+    };
+    
+    // Get initial state from localStorage if available
+    const storedState = localStorage.getItem('telegrafAppState');
+    if (storedState) {
+      try {
+        const state = JSON.parse(storedState);
+        setActivePanel(state.activePanel || null);
+      } catch (e) {
+        console.error('Failed to parse stored state:', e);
+      }
+    }
+    
+    // Add event listener for panel changes
+    window.addEventListener('telegraf-panel-change', handlePanelChange as EventListener);
+    
+    // Clean up on unmount
+    return () => {
+      window.removeEventListener('telegraf-panel-change', handlePanelChange as EventListener);
+    };
+  }, []);
   
-  const isAgentConfigActive = () => {
-    return document.getElementById('agent-config')?.classList.contains('block');
-  };
+  // When node or connection is selected, clear the active panel
+  useEffect(() => {
+    if (selectedNode || selectedConnection) {
+      setActivePanel(null);
+    }
+  }, [selectedNode, selectedConnection]);
 
   // Determine which configuration component to render
   const renderConfigComponent = () => {
+    // If a node is selected, it takes precedence
     if (selectedNode) {
-      // For testing our new NodeConfig with the parser, let's show it for all plugins
       return <NodeConfig node={selectedNode} />;
     }
 
+    // If a connection is selected, render its config
     if (selectedConnection) {
       return <ConnectionConfig connection={selectedConnection} />;
     }
     
-    // Check if secret store is meant to be shown
-    if (document.getElementById('secret-store-config')?.className.indexOf('block') !== -1) {
-      return <SecretStoreConfig />;
+    // Handle special panel types based on the activePanel state
+    switch (activePanel) {
+      case 'secret-store-config':
+        return <SecretStoreConfig />;
+      case 'agent-config':
+        return <AgentConfig />;
+      default:
+        // Default empty state when nothing is selected
+        return (
+          <div className="text-center text-gray-500 py-10">
+            <i className="ri-information-line text-4xl mb-2"></i>
+            <p>Select a node or connection to configure</p>
+          </div>
+        );
     }
-    
-    // Check if agent config is meant to be shown
-    if (document.getElementById('agent-config')?.className.indexOf('block') !== -1) {
-      return <AgentConfig />;
-    }
-
-    // Default empty state
-    return (
-      <div className="text-center text-gray-500 py-10">
-        <i className="ri-information-line text-4xl mb-2"></i>
-        <p>Select a node or connection to configure</p>
-      </div>
-    );
   };
 
   // Set the configuration title based on selection
@@ -55,10 +80,10 @@ export default function ConfigPanel() {
     if (selectedConnection) {
       return 'Connection Filter';
     }
-    if (document.getElementById('secret-store-config')?.className.indexOf('block') !== -1) {
+    if (activePanel === 'secret-store-config') {
       return 'Secret Store Configuration';
     }
-    if (document.getElementById('agent-config')?.className.indexOf('block') !== -1) {
+    if (activePanel === 'agent-config') {
       return 'Agent Configuration';
     }
     return 'Plugin Configuration';
@@ -72,10 +97,10 @@ export default function ConfigPanel() {
     if (selectedConnection) {
       return `${selectedConnection.source} → ${selectedConnection.target}`;
     }
-    if (document.getElementById('secret-store-config')?.className.indexOf('block') !== -1) {
+    if (activePanel === 'secret-store-config') {
       return 'Configure secret store and manage secrets';
     }
-    if (document.getElementById('agent-config')?.className.indexOf('block') !== -1) {
+    if (activePanel === 'agent-config') {
       return 'Global Telegraf agent settings';
     }
     return 'Select a plugin to configure';

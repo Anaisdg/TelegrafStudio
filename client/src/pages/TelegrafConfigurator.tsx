@@ -113,14 +113,19 @@ export default function TelegrafConfigurator() {
               onClick={() => {
                 setSelectedNode(null);
                 setSelectedConnection(null);
-                document.getElementById('agent-config')?.classList.remove('hidden');
-                document.getElementById('agent-config')?.classList.add('block');
-                document.getElementById('secret-store-config')?.classList.remove('block');
-                document.getElementById('secret-store-config')?.classList.add('hidden');
-                document.getElementById('node-config')?.classList.add('hidden');
-                document.getElementById('connection-config')?.classList.add('hidden');
-                document.getElementById('secret-config')?.classList.add('hidden');
-                document.getElementById('empty-config')?.classList.add('hidden');
+                
+                // Update the global app state
+                const appState = { 
+                  activePanel: 'agent-config' 
+                };
+                
+                // Store the state in localStorage for persistence
+                localStorage.setItem('telegrafAppState', JSON.stringify(appState));
+                
+                // Force a re-render
+                window.dispatchEvent(new CustomEvent('telegraf-panel-change', { 
+                  detail: { panel: 'agent-config' } 
+                }));
               }}
             >
               <i className="ri-settings-3-line mr-1"></i> Agent Settings
@@ -131,14 +136,19 @@ export default function TelegrafConfigurator() {
               onClick={() => {
                 setSelectedNode(null);
                 setSelectedConnection(null);
-                document.getElementById('agent-config')?.classList.remove('block');
-                document.getElementById('agent-config')?.classList.add('hidden');
-                document.getElementById('secret-store-config')?.classList.remove('hidden');
-                document.getElementById('secret-store-config')?.classList.add('block');
-                document.getElementById('node-config')?.classList.add('hidden');
-                document.getElementById('connection-config')?.classList.add('hidden');
-                document.getElementById('secret-config')?.classList.add('hidden');
-                document.getElementById('empty-config')?.classList.add('hidden');
+                
+                // Update the global app state
+                const appState = { 
+                  activePanel: 'secret-store-config' 
+                };
+                
+                // Store the state in localStorage for persistence
+                localStorage.setItem('telegrafAppState', JSON.stringify(appState));
+                
+                // Force a re-render
+                window.dispatchEvent(new CustomEvent('telegraf-panel-change', { 
+                  detail: { panel: 'secret-store-config' } 
+                }));
               }}
             >
               <i className="ri-key-2-line mr-1"></i> Secret Store
