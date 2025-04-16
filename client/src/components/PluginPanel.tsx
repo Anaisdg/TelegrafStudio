@@ -169,27 +169,26 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
   const renderCategoryButton = (type: string, label: string) => {
     return (
       <Button
-        variant="outline"
-        className="w-full mb-2 py-3 flex items-center justify-between border-l-4 transition-all hover:bg-gray-50"
+        variant="ghost"
+        className="w-full py-1.5 px-2 flex items-center justify-between border-l-4 transition-all hover:bg-gray-50 mb-1"
         style={{ borderLeftColor: getColorForPluginType(type) }}
         onClick={() => openPluginSelector(type)}
       >
-        <span className="text-sm font-medium ml-2">{label}</span>
-        <i className="ri-arrow-right-s-line mr-2"></i>
+        <span className="text-xs font-medium ml-1">{label}</span>
+        <i className="ri-arrow-right-s-line mr-1 text-xs text-gray-400"></i>
       </Button>
     );
   };
 
   return (
-    <div className="bg-white text-gray-800 flex flex-col h-full">
+    <div className="bg-white text-gray-800 flex flex-col h-full w-40">
       {/* Panel Header */}
-      <div className="p-3 border-b border-gray-200 bg-gray-50">
-        <h2 className="font-bold text-lg mb-1">Plugin Categories</h2>
-        <p className="text-sm text-gray-600">Select a category to add a plugin</p>
+      <div className="py-1.5 px-2 border-b border-gray-200 bg-gray-50">
+        <h2 className="font-semibold text-sm">Plugins</h2>
       </div>
 
       {/* Plugin Categories */}
-      <div className="p-3">
+      <div className="px-2 py-1.5">
         <div className="space-y-1">
           {renderCategoryButton(PluginType.INPUT, 'Inputs')}
           {renderCategoryButton(PluginType.PROCESSOR, 'Processors')}
@@ -200,9 +199,9 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
       </div>
       
       {/* Recent Plugins */}
-      <div className="mt-3 p-3 border-t border-gray-200">
-        <h3 className="font-semibold text-sm mb-2 text-gray-700">Recent Plugins</h3>
-        <div className="space-y-2">
+      <div className="mt-2 px-3 pt-2 border-t border-gray-200">
+        <h3 className="font-semibold text-xs mb-1 text-gray-500">Recent</h3>
+        <div className="space-y-1">
           {recentPlugins.map((plugin, index) => {
             const pluginInfo = availablePlugins[plugin.type]?.find(p => p.name === plugin.name);
             if (!pluginInfo) return null;
@@ -210,21 +209,17 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
             return (
               <div 
                 key={index}
-                className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer border-l-4 group"
+                className="flex items-center py-1 px-1.5 hover:bg-gray-50 rounded cursor-pointer border-l-4 group text-xs"
                 style={{ borderLeftColor: getColorForPluginType(plugin.type) }}
                 draggable
                 onDragStart={(e) => onDragStart(e, plugin.type, plugin.name)}
                 onClick={() => addNodeToCanvas(plugin.type, plugin.name)}
               >
-                <div
-                  className="w-6 h-6 mr-2 rounded flex items-center justify-center text-white"
-                  style={{ backgroundColor: getColorForPluginType(plugin.type) }}
-                >
-                  <i className={`ri-${pluginInfo.icon} text-xs`}></i>
+                <div className="font-medium flex-1 ml-1 truncate" style={{ maxWidth: '90px' }}>
+                  {plugin.name}
                 </div>
-                <div className="text-sm font-medium flex-1">{plugin.name}</div>
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="bg-blue-500 text-white p-1 rounded text-xs">
+                  <div className="bg-blue-500 text-white p-0.5 rounded text-xs">
                     <i className="ri-add-line"></i>
                   </div>
                 </div>
@@ -238,13 +233,14 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
       <div className="flex-1"></div>
       
       {/* Toggle TOML Button */}
-      <div className="p-3 border-t border-gray-200 bg-gray-50">
+      <div className="px-2 py-1.5 border-t border-gray-200 bg-gray-50">
         <Button
           variant="outline"
-          className="w-full px-3 py-2 rounded text-sm border-blue-500 hover:bg-blue-50"
+          size="sm"
+          className="w-full px-2 py-1 rounded text-xs border-blue-500 hover:bg-blue-50"
           onClick={onToggleToml}
         >
-          <i className="ri-braces-line mr-1"></i> Toggle TOML View
+          <i className="ri-braces-line mr-1"></i> TOML View
         </Button>
       </div>
       
