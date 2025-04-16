@@ -183,7 +183,7 @@ export default function TelegrafConfigurator() {
         <div className="flex-1 h-full">
           <ResizablePanelGroup direction="horizontal" className="w-full h-full">
             {/* Center Area - Canvas and TOML Editor */}
-            <ResizablePanel defaultSize={70} minSize={50} className="flex flex-col">
+            <ResizablePanel defaultSize={65} minSize={50} className="flex flex-col">
               {/* Tabs for Visual/TOML */}
               <div className="bg-gray-200 border-b border-gray-300 flex">
                 <button 
@@ -215,7 +215,7 @@ export default function TelegrafConfigurator() {
             />
 
             {/* Right Panel - Config Panel - resizable */}
-            <ResizablePanel defaultSize={30} minSize={25} maxSize={50} className="relative">
+            <ResizablePanel defaultSize={35} minSize={33} maxSize={50} className="relative">
               <ConfigPanel />
             </ResizablePanel>
           </ResizablePanelGroup>

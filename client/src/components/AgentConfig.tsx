@@ -46,7 +46,7 @@ export default function AgentConfig() {
       <h3 className="font-medium">Agent Configuration</h3>
       <p className="text-sm text-gray-600 mb-4">Configure global Telegraf agent settings</p>
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <Label className="block text-sm font-medium text-gray-700 mb-1">Collection Interval</Label>
           <div className="flex">
@@ -98,7 +98,7 @@ export default function AgentConfig() {
         </div>
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <Label className="block text-sm font-medium text-gray-700 mb-1">Metric Batch Size</Label>
           <Input 
