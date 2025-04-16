@@ -170,11 +170,11 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
     return (
       <Button
         variant="outline"
-        className="w-full h-10 mb-1.5 px-2 flex items-center justify-between border-l-4 transition-all hover:bg-gray-50"
+        className="w-full h-10 mb-1.5 px-2 flex items-center space-x-1 border-l-4 transition-all hover:bg-gray-50"
         style={{ borderLeftColor: getColorForPluginType(type) }}
         onClick={() => openPluginSelector(type)}
       >
-        <span className="font-medium ml-1">{label}</span>
+        <span className="font-medium ml-1 flex-1 text-left">{label}</span>
         <i className="ri-arrow-right-s-line"></i>
       </Button>
     );
