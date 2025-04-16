@@ -237,27 +237,36 @@ export default function SecretStoreConfig() {
     });
   };
   
-  // Keep track of the current secret key being edited
-  const [editingKey, setEditingKey] = useState<{
-    oldKey: string;
-    newKey: string;
-  } | null>(null);
-
-  // Handle when a secret key field changes
-  const handleSecretKeyInputChange = (oldKey: string, newValue: string) => {
-    setEditingKey({ oldKey, newKey: newValue });
+  // Simple state to track key editing without losing focus
+  const [localKeys, setLocalKeys] = useState<Record<string, string>>({});
+  
+  // Initialize local keys when secrets change
+  useEffect(() => {
+    const initialKeys = Object.keys(secrets).reduce((acc, key) => {
+      acc[key] = key;
+      return acc;
+    }, {} as Record<string, string>);
+    setLocalKeys(initialKeys);
+  }, [secrets]);
+  
+  // Handle key name editing
+  const handleKeyNameChange = (oldKey: string, newKey: string) => {
+    setLocalKeys({
+      ...localKeys,
+      [oldKey]: newKey
+    });
   };
-
-  // Only update the actual secret key when the input loses focus
-  const handleSecretKeyBlur = () => {
-    if (editingKey && editingKey.oldKey !== editingKey.newKey) {
+  
+  // Apply changes when the input loses focus
+  const handleKeyBlur = (oldKey: string) => {
+    const newKey = localKeys[oldKey];
+    if (newKey && newKey !== oldKey) {
       const newSecrets = { ...secrets };
-      const value = newSecrets[editingKey.oldKey];
-      delete newSecrets[editingKey.oldKey];
-      newSecrets[editingKey.newKey] = value;
+      const value = newSecrets[oldKey];
+      delete newSecrets[oldKey];
+      newSecrets[newKey] = value;
       setSecrets(newSecrets);
     }
-    setEditingKey(null);
   };
   
   // Remove a secret
@@ -475,9 +484,10 @@ export default function SecretStoreConfig() {
                 {Object.entries(secrets).map(([key, value]) => (
                   <div key={key} className="flex items-center space-x-2">
                     <Input
-                      value={editingKey && editingKey.oldKey === key ? editingKey.newKey : key}
-                      onChange={(e) => handleSecretKeyInputChange(key, e.target.value)}
-                      onBlur={handleSecretKeyBlur}
+                      key={`key-${key}`}
+                      value={localKeys[key] || key}
+                      onChange={(e) => handleKeyNameChange(key, e.target.value)}
+                      onBlur={() => handleKeyBlur(key)}
                       className="flex-1"
                       placeholder="Secret key name"
                     />
