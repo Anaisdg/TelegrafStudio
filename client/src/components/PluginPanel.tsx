@@ -26,7 +26,7 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
     setSearchTerm(e.target.value);
   };
 
-  const onDragStart = (event: React.DragEvent<HTMLDivElement>, pluginType: string, pluginName: string) => {
+  const onDragStart = (event: React.DragEvent<HTMLElement>, pluginType: string, pluginName: string) => {
     event.dataTransfer.setData('application/reactflow/type', pluginType);
     event.dataTransfer.setData('application/reactflow/plugin', pluginName);
     event.dataTransfer.effectAllowed = 'move';
@@ -201,7 +201,8 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
       
       {/* Recent Plugins */}
       <div className="mt-2 p-2 border-t border-gray-200 flex-shrink-0">
-        <h3 className="font-semibold text-xs mb-1.5 text-gray-700">Recent Plugins</h3>
+        <h2 className="font-bold text-base mb-0.5">Recent Plugins</h2>
+        <p className="text-xs text-gray-600 mb-1.5">Recently used plugins</p>
         <div className="space-y-1">
           {recentPlugins.map((plugin, index) => {
             const pluginInfo = availablePlugins[plugin.type]?.find(p => p.name === plugin.name);
@@ -214,7 +215,7 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
                 className="w-full h-10 mb-1.5 px-1 flex items-center border-l-4 transition-all hover:bg-gray-50"
                 style={{ borderLeftColor: getColorForPluginType(plugin.type) }}
                 draggable
-                onDragStart={(e) => onDragStart(e, plugin.type, plugin.name)}
+                onDragStart={(e: React.DragEvent<HTMLButtonElement>) => onDragStart(e, plugin.type, plugin.name)}
                 onClick={() => addNodeToCanvas(plugin.type, plugin.name)}
               >
                 <span className="font-medium ml-1 flex-1 text-left truncate">{plugin.name}</span>
