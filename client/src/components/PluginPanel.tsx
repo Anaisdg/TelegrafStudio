@@ -181,7 +181,7 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
   };
 
   return (
-    <div className="bg-white text-gray-800 flex flex-col h-full">
+    <div className="bg-white text-gray-800 flex flex-col h-full" style={{ width: '220px' }}>
       {/* Panel Header */}
       <div className="p-3 border-b border-gray-200 bg-gray-50">
         <h2 className="font-bold text-lg mb-1">Plugin Categories</h2>
