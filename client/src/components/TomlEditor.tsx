@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { useTelegrafConfig } from '@/hooks/TelegrafContext';
 import { convertConfigToToml } from '@/utils/telegraf';
+import { PluginType } from '@shared/schema';
 
 export default function TomlEditor() {
   const { telegrafConfig, setTelegrafConfig } = useTelegrafConfig();
@@ -11,7 +12,56 @@ export default function TomlEditor() {
   // Convert the telegrafConfig to TOML when it changes
   useEffect(() => {
     try {
-      const toml = convertConfigToToml(telegrafConfig);
+      // First, apply automatic namepass for output plugins
+      let updatedConfig = {...telegrafConfig};
+      const outputNodes = telegrafConfig.nodes.filter(node => node.type === PluginType.OUTPUT);
+      
+      // For each output node, check if it needs namepass
+      outputNodes.forEach(outputNode => {
+        // Get all input plugins
+        const inputNodes = telegrafConfig.nodes.filter(n => n.type === PluginType.INPUT);
+        
+        // Get input plugins that connect to this output
+        const connectedInputs = inputNodes.filter(input => {
+          return telegrafConfig.connections.some(conn => 
+            conn.source === input.id && conn.target === outputNode.id
+          );
+        });
+        
+        // Check if ALL input plugins connect to this output
+        const allInputsConnected = connectedInputs.length === inputNodes.length;
+        
+        // Update the node data with namepass if needed
+        if (!allInputsConnected && connectedInputs.length > 0) {
+          // Collect all metric names from connected inputs
+          const metricNames = connectedInputs.map(input => input.plugin);
+          
+          // Update the output node with namepass
+          const updatedNodes = updatedConfig.nodes.map(node => {
+            if (node.id === outputNode.id) {
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  namepass: metricNames
+                }
+              };
+            }
+            return node;
+          });
+          
+          // Update the config with the new nodes
+          updatedConfig = {
+            ...updatedConfig,
+            nodes: updatedNodes
+          };
+          
+          console.log(`TOML Editor: Auto-generated namepass for ${outputNode.plugin}: ${metricNames.join(', ')}`);
+        }
+      });
+      
+      // Now generate TOML from the updated config
+      const toml = convertConfigToToml(updatedConfig);
       setTomlValue(toml);
       setError(null);
     } catch (err) {
