@@ -120,7 +120,7 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
     }
   };
   
-  const renderPluginItem = (pluginType: string, plugin: { name: string; description: string; icon: string }) => {
+  const renderPluginItem = (pluginType: string, plugin: any) => {
     return (
       <div
         key={`${pluginType}-${plugin.name}`}
@@ -152,12 +152,12 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
   const filteredPlugins = () => {
     if (!selectedCategory) return {};
     
-    const result: Record<string, typeof availablePlugins[keyof typeof availablePlugins]> = {};
-    const type = selectedCategory;
+    const result: Record<string, any[]> = {};
+    const type = selectedCategory as keyof typeof availablePlugins;
     
     if (availablePlugins[type]) {
       result[type] = availablePlugins[type].filter(
-        (plugin) =>
+        (plugin: any) =>
           plugin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           plugin.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -211,7 +211,7 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
         <p className="text-xs text-gray-600 mb-1.5">Recently used plugins</p>
         <div className="space-y-1">
           {recentPlugins.map((plugin, index) => {
-            const pluginInfo = availablePlugins[plugin.type]?.find(p => p.name === plugin.name);
+            const pluginInfo = availablePlugins[plugin.type as keyof typeof availablePlugins]?.find((p: any) => p.name === plugin.name);
             if (!pluginInfo) return null;
             
             return (

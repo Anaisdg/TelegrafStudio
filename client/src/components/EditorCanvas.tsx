@@ -37,13 +37,13 @@ const handleStyle = {
 
 const InputNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
   <div 
-    className={`node node-input border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} 
-    style={{ borderColor: '#60A5FA', minWidth: '100px' }}
+    className={`node node-input rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} 
+    style={{ minWidth: '100px' }}
     data-type="input"
     data-node-id={id}
     data-plugin={data.plugin}
   >
-    <div className="bg-plugin-input text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#60A5FA' }}>
+    <div className="bg-plugin-input text-white px-3 py-2 rounded-md font-medium flex items-center justify-between" style={{ backgroundColor: '#60A5FA' }}>
       <span>{data.plugin}</span>
       <button 
         className="w-5 h-5 rounded hover:bg-blue-400 flex items-center justify-center text-xs"
@@ -101,13 +101,13 @@ const ProcessorNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
 
 const OutputNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
   <div 
-    className={`node node-output border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} 
-    style={{ borderColor: '#10B981', minWidth: '100px' }}
+    className={`node node-output rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} 
+    style={{ minWidth: '100px' }}
     data-type="output"
     data-node-id={id}
     data-plugin={data.plugin}
   >
-    <div className="bg-plugin-output text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#10B981' }}>
+    <div className="bg-plugin-output text-white px-3 py-2 rounded-md font-medium flex items-center justify-between" style={{ backgroundColor: '#10B981' }}>
       <span>{data.plugin}</span>
       <button 
         className="w-5 h-5 rounded hover:bg-emerald-400 flex items-center justify-center text-xs"
