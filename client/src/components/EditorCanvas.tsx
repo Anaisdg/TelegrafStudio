@@ -36,14 +36,8 @@ const handleStyle = {
 };
 
 const InputNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
-  <div 
-    className={`node node-input rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} 
-    style={{ minWidth: '100px' }}
-    data-type="input"
-    data-node-id={id}
-    data-plugin={data.plugin}
-  >
-    <div className="bg-plugin-input text-white px-3 py-2 rounded-md font-medium flex items-center justify-between" style={{ backgroundColor: '#60A5FA' }}>
+  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#60A5FA', minWidth: '100px' }}>
+    <div className="bg-plugin-input text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#60A5FA' }}>
       <span>{data.plugin}</span>
       <button 
         className="w-5 h-5 rounded hover:bg-blue-400 flex items-center justify-center text-xs"
@@ -65,13 +59,7 @@ const InputNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
 );
 
 const ProcessorNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
-  <div 
-    className={`node node-processor border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} 
-    style={{ borderColor: '#F97316', minWidth: '100px' }}
-    data-type="processor"
-    data-node-id={id}
-    data-plugin={data.plugin}
-  >
+  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#F97316', minWidth: '100px' }}>
     <div className="bg-plugin-processor text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#F97316' }}>
       <span>{data.plugin}</span>
       <button 
@@ -100,14 +88,8 @@ const ProcessorNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
 );
 
 const OutputNode = ({ data, id, selected, onDelete }: CustomNodeProps) => (
-  <div 
-    className={`node node-output rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} 
-    style={{ minWidth: '100px' }}
-    data-type="output"
-    data-node-id={id}
-    data-plugin={data.plugin}
-  >
-    <div className="bg-plugin-output text-white px-3 py-2 rounded-md font-medium flex items-center justify-between" style={{ backgroundColor: '#10B981' }}>
+  <div className={`node border-2 rounded-lg shadow-lg flex flex-col ${selected ? 'ring-2 ring-blue-400' : ''}`} style={{ borderColor: '#10B981', minWidth: '100px' }}>
+    <div className="bg-plugin-output text-white px-3 py-2 rounded-t-md font-medium flex items-center justify-between" style={{ backgroundColor: '#10B981' }}>
       <span>{data.plugin}</span>
       <button 
         className="w-5 h-5 rounded hover:bg-emerald-400 flex items-center justify-center text-xs"
@@ -178,19 +160,10 @@ const EditorCanvas = () => {
       id: node.id,
       type: node.type,
       position: node.position,
-      // Add data-type attribute to help with node positioning
       data: {
         ...node.data,
         plugin: node.plugin,
       },
-      // Set attributes that will preserve exact positions
-      draggable: true,
-      selectable: true,
-      connectable: true,
-      // Add an important data attribute to identify node type in the DOM
-      dragHandle: `.node-${node.type}`,
-      // Set exact position properties
-      positionAbsolute: node.position,
     }));
   }, [telegrafConfig.nodes]);
 
@@ -223,45 +196,27 @@ const EditorCanvas = () => {
 
   // When nodes change position, update the telegrafConfig
   const handleNodesChange = useCallback((changes: any) => {
-    // Apply changes to the local state first
     onNodesChange(changes);
     
-    // We only care about final position changes (not during dragging)
+    // Filter for position changes only
     const positionChanges = changes.filter((change: any) => 
       change.type === 'position' && change.position && change.dragging === false
     );
     
     if (positionChanges.length > 0) {
-      // Preserve all node positions - important for preventing unwanted shifts
-      const currentNodePositions = telegrafConfig.nodes.reduce((acc, node) => {
-        acc[node.id] = { ...node.position };
-        return acc;
-      }, {} as Record<string, {x: number, y: number}>);
-      
       // Update node positions in telegrafConfig
-      const updatedNodes = telegrafConfig.nodes.map(node => {
-        // Find if this node has a position change
-        const change = positionChanges.find((c: any) => c.id === node.id);
-        
-        if (change) {
-          // Apply the new position if there's a change
-          return {
-            ...node,
-            position: {
-              x: Math.round(change.position.x / 20) * 20, // Snap to grid
-              y: Math.round(change.position.y / 20) * 20  // Snap to grid
-            }
-          };
-        } else {
-          // Keep the exact same position for unchanged nodes
-          return {
-            ...node,
-            position: currentNodePositions[node.id] || node.position
+      const updatedNodes = [...telegrafConfig.nodes];
+      
+      positionChanges.forEach((change: any) => {
+        const nodeIndex = updatedNodes.findIndex(node => node.id === change.id);
+        if (nodeIndex !== -1) {
+          updatedNodes[nodeIndex] = {
+            ...updatedNodes[nodeIndex],
+            position: change.position
           };
         }
       });
       
-      // Update the entire telegrafConfig with preserved positions
       setTelegrafConfig({
         ...telegrafConfig,
         nodes: updatedNodes
@@ -296,18 +251,8 @@ const EditorCanvas = () => {
   // Handle connecting two nodes
   const onConnect = useCallback(
     (connection: Connection) => {
-      // IMPORTANT: Get a snapshot of all current node positions before any changes
-      const currentNodePositions = telegrafConfig.nodes.reduce((acc, node) => {
-        acc[node.id] = { ...node.position };
-        return acc;
-      }, {} as Record<string, {x: number, y: number}>);
-      
-      // Create a unique ID for this connection
-      const connectionId = `e-${connection.source}-${connection.target}-${Date.now().toString(36)}`;
-      
-      // Create a new edge with the connection
       const newEdge = {
-        id: connectionId,
+        id: `e-${connection.source}-${connection.target}`,
         source: connection.source || '',
         target: connection.target || '',
         type: 'default',
@@ -321,46 +266,24 @@ const EditorCanvas = () => {
           height: 14,
           color: '#555'
         },
-        // Explicitly disable any movement or recalculation
-        animated: false,
-        updatable: false,
-        deletable: true,
       };
+
+      setEdges((eds) => [...eds, newEdge]);
 
       // Update telegrafConfig connections
       const sourceNode = telegrafConfig.nodes.find((n) => n.id === connection.source);
       const targetNode = telegrafConfig.nodes.find((n) => n.id === connection.target);
 
       if (sourceNode && targetNode) {
-        // Create a new connection for the Telegraf config
         const newConnection = {
-          id: connectionId,
+          id: newEdge.id,
           source: sourceNode.id,
           target: targetNode.id,
           filters: {},
         };
 
-        // Important: Create a completely new set of nodes with the exact same positions
-        // This prevents React Flow from recalculating positions when edges are added
-        const updatedNodes = telegrafConfig.nodes.map(node => ({
-          ...node,
-          // Keep the exact same position data
-          position: { ...currentNodePositions[node.id] || node.position },
-          // Set absolute position to ensure it doesn't move
-          positionAbsolute: { ...currentNodePositions[node.id] || node.position },
-        }));
-
-        // Add the edge separately after updating the nodes to prevent shifts
-        setTimeout(() => {
-          // Add the new edge to the set of edges - this needs to be deferred 
-          // to prevent React Flow from triggering a layout recomputation
-          setEdges(eds => [...eds, newEdge]);
-        }, 0);
-
-        // First update the node positions with preserved positions
         setTelegrafConfig({
           ...telegrafConfig,
-          nodes: updatedNodes,
           connections: [...telegrafConfig.connections, newConnection],
         });
       }
@@ -374,12 +297,6 @@ const EditorCanvas = () => {
       event.preventDefault();
 
       if (reactFlowWrapper.current && reactFlowInstance) {
-        // Get a snapshot of all current node positions
-        const currentNodePositions = telegrafConfig.nodes.reduce((acc, node) => {
-          acc[node.id] = { ...node.position };
-          return acc;
-        }, {} as Record<string, {x: number, y: number}>);
-        
         const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
         const type = event.dataTransfer.getData('application/reactflow/type');
         const pluginName = event.dataTransfer.getData('application/reactflow/plugin');
@@ -387,43 +304,31 @@ const EditorCanvas = () => {
         if (!type || !pluginName) return;
 
         // Get the position where the node was dropped in the flow space
-        const exactPosition = reactFlowInstance.screenToFlowPosition({
+        const position = reactFlowInstance.screenToFlowPosition({
           x: event.clientX - reactFlowBounds.left,
           y: event.clientY - reactFlowBounds.top,
         });
-        
-        // Snap to grid for cleaner positioning
-        const position = {
-          x: Math.round(exactPosition.x / 20) * 20,
-          y: Math.round(exactPosition.y / 20) * 20
-        };
 
         // Generate a unique ID for the new node
         const nodeId = `${pluginName}-${uuidv4().slice(0, 4)}`;
 
-        // Create the telegraf config node with precise position
+        // Create the telegraf config node
         const telegrafNode = {
           id: nodeId,
           type: type as typeof PluginType[keyof typeof PluginType],
           plugin: pluginName,
-          // Store the position exactly as calculated (important!)
-          position: position,
-          positionAbsolute: position,
+          // Store the position explicitly
+          position: {
+            x: position.x,
+            y: position.y
+          },
           data: { ...getDefaultNodeData(pluginName) },
         };
 
-        // Update all existing nodes to preserve their positions
-        const preservedNodes = telegrafConfig.nodes.map(node => ({
-          ...node,
-          // Keep the exact same position data
-          position: currentNodePositions[node.id] || node.position,
-          positionAbsolute: currentNodePositions[node.id] || node.position,
-        }));
-
-        // Update the telegraf config with the new node and preserved positions
+        // Update the telegraf config with the new node
         setTelegrafConfig({
           ...telegrafConfig,
-          nodes: [...preservedNodes, telegrafNode],
+          nodes: [...telegrafConfig.nodes, telegrafNode],
         });
       }
     },
@@ -443,56 +348,22 @@ const EditorCanvas = () => {
       
       if (!type || !plugin || !position) return;
       
-      // Get a snapshot of all current node positions before any changes
-      const currentNodePositions = telegrafConfig.nodes.reduce((acc, node) => {
-        acc[node.id] = { ...node.position };
-        return acc;
-      }, {} as Record<string, {x: number, y: number}>);
-      
-      // Determine an exact position based on existing nodes of this type
-      let exactPos = {...position};
-      
-      // Find existing nodes of this type to avoid overlap
-      const existingNodesOfType = telegrafConfig.nodes.filter(n => n.type === type);
-      for (const node of existingNodesOfType) {
-        if (Math.abs(node.position.x - exactPos.x) < 20 && 
-            Math.abs(node.position.y - exactPos.y) < 20) {
-          // Position is too close, adjust the Y position
-          exactPos.y += 100;
-        }
-      }
-      
-      // Snap to grid for cleaner layout
-      const finalPosition = {
-        x: Math.round(exactPos.x / 20) * 20,
-        y: Math.round(exactPos.y / 20) * 20
-      };
-      
       // Generate a unique ID for the new node
       const nodeId = `${plugin}-${uuidv4().slice(0, 4)}`;
       
-      // Create the telegraf config node with precise position information
+      // Create the telegraf config node
       const telegrafNode = {
         id: nodeId,
         type: type as typeof PluginType[keyof typeof PluginType],
         plugin: plugin,
-        position: finalPosition,
-        positionAbsolute: finalPosition,
+        position: position,
         data: { ...getDefaultNodeData(plugin) },
       };
       
-      // Update all existing nodes to preserve their positions exactly
-      const preservedNodes = telegrafConfig.nodes.map(node => ({
-        ...node,
-        // Keep the exact same position data
-        position: currentNodePositions[node.id] || node.position,
-        positionAbsolute: currentNodePositions[node.id] || node.position,
-      }));
-      
-      // Update the telegraf config with the new node and preserved positions
+      // Update the telegraf config with the new node
       setTelegrafConfig({
         ...telegrafConfig,
-        nodes: [...preservedNodes, telegrafNode],
+        nodes: [...telegrafConfig.nodes, telegrafNode],
       });
     };
     
@@ -523,36 +394,6 @@ const EditorCanvas = () => {
           onDrop={onDrop}
           onDragOver={onDragOver}
           onInit={setReactFlowInstance}
-          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-          fitView={false}
-          snapToGrid={true}
-          snapGrid={[20, 20]}
-          nodesDraggable={true}
-          nodesConnectable={true}
-          elementsSelectable={true}
-          selectNodesOnDrag={false}
-          preventScrolling={false}
-          defaultEdgeOptions={{
-            type: 'default',
-            style: { strokeWidth: 3, stroke: '#555' },
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              width: 14,
-              height: 14,
-              color: '#555'
-            },
-          }}
-          proOptions={{ hideAttribution: true }}
-          minZoom={0.5}
-          maxZoom={2}
-          translateExtent={[[-500, -500], [1500, 1500]]}
-          nodeExtent={[[-500, -500], [1500, 1500]]}
-          elevateNodesOnSelect={false}
-          panOnDrag={true}
-          zoomOnScroll={true}
-          zoomOnPinch={true}
-          autoPanOnConnect={false}
-          autoPanOnNodeDrag={false}
         >
           <Controls />
           <Background color="#4B5563" gap={20} />

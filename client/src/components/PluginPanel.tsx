@@ -84,19 +84,13 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
     const canvasElement = document.querySelector('.react-flow__viewport');
     if (!canvasElement) return;
     
-    // Use fixed positions based on plugin type to ensure consistent layout
-    let position;
-    if (pluginType === PluginType.INPUT) {
-      position = { x: 100, y: 150 };
-    } else if (pluginType === PluginType.OUTPUT) {
-      position = { x: 600, y: 150 };
-    } else {
-      position = { x: 350, y: 150 };
-    }
-    
-    // Get existing nodes of this type to offset the Y position
-    const existingNodes = document.querySelectorAll(`.react-flow__node[data-type="${pluginType}"]`).length;
-    position.y += existingNodes * 100;
+    // Calculate position - we'll add nodes at staggered positions
+    const basePos = { x: 200, y: 150 };
+    const existingNodes = document.querySelectorAll('.react-flow__node').length;
+    const position = {
+      x: basePos.x + (existingNodes % 3) * 50, 
+      y: basePos.y + Math.floor(existingNodes / 3) * 100
+    };
     
     // Create a synthetic event to trigger node addition
     const customEvent = new CustomEvent('telegraf-add-node', {
@@ -120,7 +114,7 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
     }
   };
   
-  const renderPluginItem = (pluginType: string, plugin: any) => {
+  const renderPluginItem = (pluginType: string, plugin: { name: string; description: string; icon: string }) => {
     return (
       <div
         key={`${pluginType}-${plugin.name}`}
@@ -152,12 +146,12 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
   const filteredPlugins = () => {
     if (!selectedCategory) return {};
     
-    const result: Record<string, any[]> = {};
-    const type = selectedCategory as keyof typeof availablePlugins;
+    const result: Record<string, typeof availablePlugins[keyof typeof availablePlugins]> = {};
+    const type = selectedCategory;
     
     if (availablePlugins[type]) {
       result[type] = availablePlugins[type].filter(
-        (plugin: any) =>
+        (plugin) =>
           plugin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           plugin.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -211,7 +205,7 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
         <p className="text-xs text-gray-600 mb-1.5">Recently used plugins</p>
         <div className="space-y-1">
           {recentPlugins.map((plugin, index) => {
-            const pluginInfo = availablePlugins[plugin.type as keyof typeof availablePlugins]?.find((p: any) => p.name === plugin.name);
+            const pluginInfo = availablePlugins[plugin.type]?.find(p => p.name === plugin.name);
             if (!pluginInfo) return null;
             
             return (

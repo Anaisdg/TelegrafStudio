@@ -601,11 +601,8 @@ export default function NodeConfig({ node }: NodeConfigProps) {
             <Label htmlFor="tagpass" className="font-medium">Tagpass</Label>
             <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700">Tags</Badge>
           </div>
-          <p className="text-xs text-gray-500 mb-2">
-            Filter measurements based on tag values. Multiple values should be comma-separated.
-          </p>
-          <p className="text-xs text-gray-500 bg-gray-50 p-1 rounded">
-            <span className="font-semibold">Format:</span> <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">tag = ["value1", "value2"]</code>
+          <p className="text-xs text-gray-500">
+            Filter measurements based on tag values. Format: <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">tag = ["value1", "value2"]</code>
           </p>
           
           {/* Tag entry form */}
@@ -617,17 +614,17 @@ export default function NodeConfig({ node }: NodeConfigProps) {
                 placeholder="host"
                 value={newTagKey}
                 onChange={(e) => setNewTagKey(e.target.value)}
-                className="text-sm mt-1 h-9"
+                className="text-sm mt-1"
               />
             </div>
             <div>
-              <Label htmlFor="tagValues" className="text-xs">Tag Values</Label>
+              <Label htmlFor="tagValues" className="text-xs">Tag Values (comma-separated)</Label>
               <Input 
                 id="tagValues"
                 placeholder="web-01, web-02"
                 value={newTagValues}
                 onChange={(e) => setNewTagValues(e.target.value)}
-                className="text-sm mt-1 h-9"
+                className="text-sm mt-1"
               />
             </div>
           </div>
@@ -636,7 +633,7 @@ export default function NodeConfig({ node }: NodeConfigProps) {
             type="button" 
             variant="outline" 
             size="sm" 
-            className="w-full text-sm mt-2"
+            className="w-full text-sm"
             onClick={addTagEntry}
             disabled={!newTagKey || !newTagValues}
           >
