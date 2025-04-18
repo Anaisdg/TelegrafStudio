@@ -70,11 +70,12 @@ export function convertConfigToToml(config: TelegrafConfig): string {
         toml += '\n';
         toml += `[[${type}s.${node.plugin}]]\n`;
         
-        // Add filters from connections where this node is the target
-        const connections = config.connections.filter(conn => conn.source === node.id);
-        if (connections.length > 0) {
-          // Extract all filters
-          connections.forEach(conn => {
+        // Add node data
+        // Add filters from connections targeting this node (legacy approach - will be phased out)
+        const incomingConnections = config.connections.filter(conn => conn.target === node.id);
+        if (incomingConnections.length > 0) {
+          // Extract all filters from legacy connections
+          incomingConnections.forEach(conn => {
             if (conn.filters) {
               Object.entries(conn.filters).forEach(([filterType, values]) => {
                 if (values.length > 0) {
@@ -85,13 +86,34 @@ export function convertConfigToToml(config: TelegrafConfig): string {
           });
         }
         
-        // Add node data
         if (node.data) {
+          // Process the data fields
           Object.entries(node.data).forEach(([key, value]) => {
-            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-              // Handle nested objects like fields in converter
+            // Special handling for filters
+            if (['namepass', 'namedrop', 'fieldpass', 'fielddrop'].includes(key) && Array.isArray(value)) {
+              toml += `  ${key} = ${JSON.stringify(value)}\n`;
+              return;
+            }
+            
+            // Special handling for tagpass and tagdrop (objects)
+            if (['tagpass', 'tagdrop'].includes(key) && typeof value === 'object' && value !== null && !Array.isArray(value)) {
               toml += `  [${type}s.${node.plugin}.${key}]\n`;
-              Object.entries(value).forEach(([subKey, subValue]) => {
+              
+              // Safely cast value to Record with a non-null assertion since we've checked for null
+              const tagObject = value as Record<string, string[]>;
+              Object.entries(tagObject).forEach(([tagKey, tagValue]) => {
+                toml += `    ${tagKey} = ${JSON.stringify(tagValue)}\n`;
+              });
+              return;
+            }
+            
+            // General object handling (like converter fields)
+            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+              toml += `  [${type}s.${node.plugin}.${key}]\n`;
+              
+              // Safely cast value to Record
+              const objValue = value as Record<string, any>;
+              Object.entries(objValue).forEach(([subKey, subValue]) => {
                 toml += `    ${subKey} = ${JSON.stringify(subValue)}\n`;
               });
             } else if (Array.isArray(value)) {

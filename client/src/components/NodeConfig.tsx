@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTelegrafConfig } from '@/hooks/TelegrafContext';
-import { Node } from '@shared/schema';
+import { Node, PluginType } from '@shared/schema';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +10,9 @@ import { getDefaultPluginConfig } from '@/utils/telegraf';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface NodeConfigProps {
   node: Node;
@@ -21,11 +24,71 @@ export default function NodeConfig({ node }: NodeConfigProps) {
   const [loading, setLoading] = useState(false);
   const [pluginConfig, setPluginConfig] = useState<any>(null);
   const { toast } = useToast();
+  
+  // States for filter fields
+  const [namepass, setNamepass] = useState<string>('');
+  const [fieldpass, setFieldpass] = useState<string>('');
+  const [tagpassString, setTagpassString] = useState<string>('');
+  
+  // Determine if this plugin type can have these filters based on rules
+  const canUseNamepass = node.type === PluginType.PROCESSOR || 
+                         node.type === PluginType.AGGREGATOR || 
+                         node.type === PluginType.OUTPUT;
+                         
+  const canUseFieldpass = node.type === PluginType.INPUT || 
+                          node.type === PluginType.PROCESSOR ||
+                          node.type === PluginType.AGGREGATOR;
 
   useEffect(() => {
     setNodeData({ ...node.data });
     loadPluginConfig();
     console.log("Selected node:", node);
+    
+    // Initialize filter fields from node data
+    if (node.data) {
+      // Handle namepass
+      if (node.data.namepass) {
+        const namepassValue = Array.isArray(node.data.namepass) 
+          ? node.data.namepass.join(', ') 
+          : node.data.namepass;
+        setNamepass(namepassValue);
+      } else {
+        setNamepass('');
+      }
+      
+      // Handle fieldpass
+      if (node.data.fieldpass) {
+        const fieldpassValue = Array.isArray(node.data.fieldpass) 
+          ? node.data.fieldpass.join(', ') 
+          : node.data.fieldpass;
+        setFieldpass(fieldpassValue);
+      } else {
+        setFieldpass('');
+      }
+      
+      // Handle tagpass (complex object structure)
+      if (node.data.tagpass) {
+        const tagpassObj = node.data.tagpass;
+        if (tagpassObj && typeof tagpassObj === 'object') {
+          // Convert tagpass object to string representation
+          const tagpassStr = Object.entries(tagpassObj)
+            .map(([tag, patterns]) => {
+              const patternsStr = Array.isArray(patterns) 
+                ? patterns.join('|') 
+                : patterns;
+              return `${tag}:${patternsStr}`;
+            })
+            .join('\n');
+          setTagpassString(tagpassStr);
+        } else if (typeof tagpassObj === 'string') {
+          setTagpassString(tagpassObj);
+        } else {
+          setTagpassString('');
+        }
+      } else {
+        setTagpassString('');
+      }
+    }
   }, [node]);
 
   const loadPluginConfig = async () => {
@@ -295,9 +358,168 @@ export default function NodeConfig({ node }: NodeConfigProps) {
     );
   };
 
+  // Handle applying filter changes
+  const handleApplyFilters = () => {
+    const updatedNodeData = { ...nodeData };
+    
+    // Process namepass if this plugin can use it
+    if (canUseNamepass) {
+      if (namepass.trim()) {
+        updatedNodeData.namepass = namepass.split(',').map(item => item.trim()).filter(Boolean);
+      } else {
+        delete updatedNodeData.namepass;
+      }
+    }
+    
+    // Process fieldpass if this plugin can use it
+    if (canUseFieldpass) {
+      if (fieldpass.trim()) {
+        updatedNodeData.fieldpass = fieldpass.split(',').map(item => item.trim()).filter(Boolean);
+      } else {
+        delete updatedNodeData.fieldpass;
+      }
+    }
+    
+    // Process tagpass (all plugins can use tagpass)
+    if (tagpassString.trim()) {
+      const tagpassObj: Record<string, string[]> = {};
+      
+      tagpassString.split('\n').forEach(line => {
+        const [key, valueStr] = line.split(':');
+        if (key && valueStr) {
+          const trimmedKey = key.trim();
+          // Split by pipe for multiple values
+          tagpassObj[trimmedKey] = valueStr.split('|').map(v => v.trim()).filter(Boolean);
+        }
+      });
+      
+      if (Object.keys(tagpassObj).length > 0) {
+        updatedNodeData.tagpass = tagpassObj;
+      } else {
+        delete updatedNodeData.tagpass;
+      }
+    } else {
+      delete updatedNodeData.tagpass;
+    }
+    
+    // Update the node data
+    setNodeData(updatedNodeData);
+    
+    // Update the telegraf config
+    const updatedNodes = telegrafConfig.nodes.map((n) => {
+      if (n.id === node.id) {
+        return {
+          ...n,
+          data: updatedNodeData,
+        };
+      }
+      return n;
+    });
+    
+    setTelegrafConfig({
+      ...telegrafConfig,
+      nodes: updatedNodes,
+    });
+    
+    toast({
+      title: 'Filters Updated',
+      description: `Filters for ${node.plugin} have been updated`,
+    });
+  };
+  
+  // Render the filters tab
+  const renderFiltersTab = () => {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h3 className="text-lg font-medium">Metric and Field Filtering</h3>
+          <p className="text-sm text-gray-600">Configure which metrics and fields this plugin will process</p>
+        </div>
+        
+        {canUseNamepass && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="namepass" className="font-medium">Namepass</Label>
+              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">Metric Names</Badge>
+            </div>
+            <p className="text-xs text-gray-500">Comma-separated list of metric names to include (matches exact metric names)</p>
+            <Textarea
+              id="namepass"
+              placeholder="cpu, mem, disk"
+              value={namepass}
+              onChange={(e) => setNamepass(e.target.value)}
+              className="font-mono text-sm"
+            />
+          </div>
+        )}
+        
+        {canUseFieldpass && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="fieldpass" className="font-medium">Fieldpass</Label>
+              <Badge variant="outline" className="text-xs bg-green-50 text-green-700">Field Names</Badge>
+            </div>
+            <p className="text-xs text-gray-500">Comma-separated list of fields to include (supports wildcards with *)</p>
+            <Textarea
+              id="fieldpass"
+              placeholder="usage_*, uptime, value"
+              value={fieldpass}
+              onChange={(e) => setFieldpass(e.target.value)}
+              className="font-mono text-sm"
+            />
+          </div>
+        )}
+        
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="tagpass" className="font-medium">Tagpass</Label>
+            <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700">Tags</Badge>
+          </div>
+          <p className="text-xs text-gray-500">
+            Tag filters to include by tag value. One per line in format <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">tag:value</code>.
+            Use <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">|</code> to separate multiple values for a tag.
+          </p>
+          <Textarea
+            id="tagpass"
+            placeholder="cpu:cpu0|cpu1\nhost:prod*"
+            value={tagpassString}
+            onChange={(e) => setTagpassString(e.target.value)}
+            className="font-mono text-sm"
+            rows={4}
+          />
+        </div>
+        
+        <Separator />
+        
+        <div className="pt-2">
+          <Button 
+            variant="default"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={handleApplyFilters}
+          >
+            Apply Filters
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4" id="node-config">
-      {renderContent()}
+      <Tabs defaultValue="config" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="config">Plugin Config</TabsTrigger>
+          <TabsTrigger value="filters">Filtering</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="config">
+          {renderContent()}
+        </TabsContent>
+        
+        <TabsContent value="filters">
+          {renderFiltersTab()}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
