@@ -28,7 +28,9 @@ export default function NodeConfig({ node }: NodeConfigProps) {
   // States for filter fields
   const [namepass, setNamepass] = useState<string>('');
   const [fieldpass, setFieldpass] = useState<string>('');
-  const [tagpassString, setTagpassString] = useState<string>('');
+  const [tagpassEntries, setTagpassEntries] = useState<{key: string, values: string}[]>([]);
+  const [newTagKey, setNewTagKey] = useState<string>('');
+  const [newTagValues, setNewTagValues] = useState<string>('');
   
   // Determine if this plugin type can have these filters based on rules
   const canUseNamepass = node.type === PluginType.PROCESSOR || 
@@ -66,26 +68,20 @@ export default function NodeConfig({ node }: NodeConfigProps) {
       }
       
       // Handle tagpass (complex object structure)
-      if (node.data.tagpass) {
+      if (node.data.tagpass && typeof node.data.tagpass === 'object') {
         const tagpassObj = node.data.tagpass;
-        if (tagpassObj && typeof tagpassObj === 'object') {
-          // Convert tagpass object to string representation
-          const tagpassStr = Object.entries(tagpassObj)
-            .map(([tag, patterns]) => {
-              const patternsStr = Array.isArray(patterns) 
-                ? patterns.join('|') 
-                : patterns;
-              return `${tag}:${patternsStr}`;
-            })
-            .join('\n');
-          setTagpassString(tagpassStr);
-        } else if (typeof tagpassObj === 'string') {
-          setTagpassString(tagpassObj);
-        } else {
-          setTagpassString('');
-        }
+        const entries = Object.entries(tagpassObj).map(([key, values]) => {
+          // Convert array of values to comma-separated string
+          const valuesStr = Array.isArray(values) 
+            ? values.join(', ') 
+            : String(values);
+          
+          return { key, values: valuesStr };
+        });
+        
+        setTagpassEntries(entries);
       } else {
-        setTagpassString('');
+        setTagpassEntries([]);
       }
     }
   }, [node]);
@@ -357,6 +353,22 @@ export default function NodeConfig({ node }: NodeConfigProps) {
     );
   };
 
+  // Helper to add a tag entry
+  const addTagEntry = () => {
+    if (newTagKey && newTagValues) {
+      setTagpassEntries([...tagpassEntries, { key: newTagKey, values: newTagValues }]);
+      setNewTagKey('');
+      setNewTagValues('');
+    }
+  };
+  
+  // Helper to remove a tag entry
+  const removeTagEntry = (index: number) => {
+    const newEntries = [...tagpassEntries];
+    newEntries.splice(index, 1);
+    setTagpassEntries(newEntries);
+  };
+  
   // Handle applying filter changes
   const handleApplyFilters = () => {
     const updatedNodeData = { ...nodeData };
@@ -379,16 +391,15 @@ export default function NodeConfig({ node }: NodeConfigProps) {
       }
     }
     
-    // Process tagpass (all plugins can use tagpass)
-    if (tagpassString.trim()) {
+    // Process tagpass entries (all plugins can use tagpass)
+    if (tagpassEntries.length > 0) {
       const tagpassObj: Record<string, string[]> = {};
       
-      tagpassString.split('\n').forEach(line => {
-        const [key, valueStr] = line.split(':');
-        if (key && valueStr) {
-          const trimmedKey = key.trim();
-          // Split by pipe for multiple values
-          tagpassObj[trimmedKey] = valueStr.split('|').map(v => v.trim()).filter(Boolean);
+      // Convert entries to the proper format
+      tagpassEntries.forEach(entry => {
+        if (entry.key && entry.values) {
+          // Split comma-separated values into array
+          tagpassObj[entry.key] = entry.values.split(',').map(v => v.trim()).filter(Boolean);
         }
       });
       
@@ -433,13 +444,6 @@ export default function NodeConfig({ node }: NodeConfigProps) {
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Metric and Field Filtering</h3>
           <p className="text-sm text-gray-600">Configure which metrics and fields this plugin will process</p>
-          
-          {node.type === PluginType.INPUT && (
-            <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-sm flex items-start space-x-2">
-              <span className="font-medium">Input Plugin Note:</span>
-              <span>Input plugins can use fieldpass and tagpass filters but not namepass.</span>
-            </div>
-          )}
         </div>
         
         {canUseNamepass && (
@@ -476,23 +480,73 @@ export default function NodeConfig({ node }: NodeConfigProps) {
           </div>
         )}
         
-        <div className="space-y-2">
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Label htmlFor="tagpass" className="font-medium">Tagpass</Label>
             <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700">Tags</Badge>
           </div>
           <p className="text-xs text-gray-500">
-            Tag filters to include by tag value. One per line in format <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">tag:value</code>.
-            Use <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">|</code> to separate multiple values for a tag.
+            Filter measurements based on tag values. Format: <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">tag = ["value1", "value2"]</code>
           </p>
-          <Textarea
-            id="tagpass"
-            placeholder="cpu:cpu0|cpu1\nhost:prod*"
-            value={tagpassString}
-            onChange={(e) => setTagpassString(e.target.value)}
-            className="font-mono text-sm"
-            rows={4}
-          />
+          
+          {/* Tag entry form */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="tagKey" className="text-xs">Tag Name</Label>
+              <Input 
+                id="tagKey"
+                placeholder="host"
+                value={newTagKey}
+                onChange={(e) => setNewTagKey(e.target.value)}
+                className="text-sm mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="tagValues" className="text-xs">Tag Values (comma-separated)</Label>
+              <Input 
+                id="tagValues"
+                placeholder="web-01, web-02"
+                value={newTagValues}
+                onChange={(e) => setNewTagValues(e.target.value)}
+                className="text-sm mt-1"
+              />
+            </div>
+          </div>
+          
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="sm" 
+            className="w-full text-sm"
+            onClick={addTagEntry}
+            disabled={!newTagKey || !newTagValues}
+          >
+            + Add Tag Filter
+          </Button>
+          
+          {/* Existing tag entries */}
+          {tagpassEntries.length > 0 && (
+            <div className="mt-3 border rounded-md p-3 space-y-2 bg-gray-50">
+              <h4 className="text-sm font-medium text-gray-700">Configured Tag Filters</h4>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {tagpassEntries.map((entry, index) => (
+                  <div key={index} className="bg-white p-2 rounded border flex justify-between items-center">
+                    <div className="font-mono text-sm">
+                      {entry.key} = ["{entry.values.split(',').map(v => v.trim()).join('", "')}"]
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 w-6 p-0 rounded-full"
+                      onClick={() => removeTagEntry(index)}
+                    >
+                      ×
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         
         <Separator />
