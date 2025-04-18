@@ -296,15 +296,18 @@ const EditorCanvas = () => {
   // Handle connecting two nodes
   const onConnect = useCallback(
     (connection: Connection) => {
-      // Preserve exact node positions before creating connection
+      // IMPORTANT: Get a snapshot of all current node positions before any changes
       const currentNodePositions = telegrafConfig.nodes.reduce((acc, node) => {
         acc[node.id] = { ...node.position };
         return acc;
       }, {} as Record<string, {x: number, y: number}>);
       
+      // Create a unique ID for this connection
+      const connectionId = `e-${connection.source}-${connection.target}-${Date.now().toString(36)}`;
+      
       // Create a new edge with the connection
       const newEdge = {
-        id: `e-${connection.source}-${connection.target}`,
+        id: connectionId,
         source: connection.source || '',
         target: connection.target || '',
         type: 'default',
@@ -318,10 +321,11 @@ const EditorCanvas = () => {
           height: 14,
           color: '#555'
         },
+        // Explicitly disable any movement or recalculation
+        animated: false,
+        updatable: false,
+        deletable: true,
       };
-
-      // Add the new edge to the set of edges
-      setEdges((eds) => [...eds, newEdge]);
 
       // Update telegrafConfig connections
       const sourceNode = telegrafConfig.nodes.find((n) => n.id === connection.source);
@@ -330,19 +334,30 @@ const EditorCanvas = () => {
       if (sourceNode && targetNode) {
         // Create a new connection for the Telegraf config
         const newConnection = {
-          id: newEdge.id,
+          id: connectionId,
           source: sourceNode.id,
           target: targetNode.id,
           filters: {},
         };
 
-        // Get the current nodes with preserved positions
+        // Important: Create a completely new set of nodes with the exact same positions
+        // This prevents React Flow from recalculating positions when edges are added
         const updatedNodes = telegrafConfig.nodes.map(node => ({
           ...node,
-          position: currentNodePositions[node.id] || node.position
+          // Keep the exact same position data
+          position: { ...currentNodePositions[node.id] || node.position },
+          // Set absolute position to ensure it doesn't move
+          positionAbsolute: { ...currentNodePositions[node.id] || node.position },
         }));
 
-        // Update the telegrafConfig with the new connection and preserved node positions
+        // Add the edge separately after updating the nodes to prevent shifts
+        setTimeout(() => {
+          // Add the new edge to the set of edges - this needs to be deferred 
+          // to prevent React Flow from triggering a layout recomputation
+          setEdges(eds => [...eds, newEdge]);
+        }, 0);
+
+        // First update the node positions with preserved positions
         setTelegrafConfig({
           ...telegrafConfig,
           nodes: updatedNodes,
@@ -359,6 +374,12 @@ const EditorCanvas = () => {
       event.preventDefault();
 
       if (reactFlowWrapper.current && reactFlowInstance) {
+        // Get a snapshot of all current node positions
+        const currentNodePositions = telegrafConfig.nodes.reduce((acc, node) => {
+          acc[node.id] = { ...node.position };
+          return acc;
+        }, {} as Record<string, {x: number, y: number}>);
+        
         const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
         const type = event.dataTransfer.getData('application/reactflow/type');
         const pluginName = event.dataTransfer.getData('application/reactflow/plugin');
@@ -387,13 +408,22 @@ const EditorCanvas = () => {
           plugin: pluginName,
           // Store the position exactly as calculated (important!)
           position: position,
+          positionAbsolute: position,
           data: { ...getDefaultNodeData(pluginName) },
         };
 
-        // Update the telegraf config with the new node
+        // Update all existing nodes to preserve their positions
+        const preservedNodes = telegrafConfig.nodes.map(node => ({
+          ...node,
+          // Keep the exact same position data
+          position: currentNodePositions[node.id] || node.position,
+          positionAbsolute: currentNodePositions[node.id] || node.position,
+        }));
+
+        // Update the telegraf config with the new node and preserved positions
         setTelegrafConfig({
           ...telegrafConfig,
-          nodes: [...telegrafConfig.nodes, telegrafNode],
+          nodes: [...preservedNodes, telegrafNode],
         });
       }
     },
@@ -412,6 +442,12 @@ const EditorCanvas = () => {
       const { type, plugin, position } = customEvent.detail;
       
       if (!type || !plugin || !position) return;
+      
+      // Get a snapshot of all current node positions before any changes
+      const currentNodePositions = telegrafConfig.nodes.reduce((acc, node) => {
+        acc[node.id] = { ...node.position };
+        return acc;
+      }, {} as Record<string, {x: number, y: number}>);
       
       // Determine an exact position based on existing nodes of this type
       let exactPos = {...position};
@@ -441,13 +477,22 @@ const EditorCanvas = () => {
         type: type as typeof PluginType[keyof typeof PluginType],
         plugin: plugin,
         position: finalPosition,
+        positionAbsolute: finalPosition,
         data: { ...getDefaultNodeData(plugin) },
       };
       
-      // Update the telegraf config with the new node
+      // Update all existing nodes to preserve their positions exactly
+      const preservedNodes = telegrafConfig.nodes.map(node => ({
+        ...node,
+        // Keep the exact same position data
+        position: currentNodePositions[node.id] || node.position,
+        positionAbsolute: currentNodePositions[node.id] || node.position,
+      }));
+      
+      // Update the telegraf config with the new node and preserved positions
       setTelegrafConfig({
         ...telegrafConfig,
-        nodes: [...telegrafConfig.nodes, telegrafNode],
+        nodes: [...preservedNodes, telegrafNode],
       });
     };
     
@@ -497,6 +542,17 @@ const EditorCanvas = () => {
               color: '#555'
             },
           }}
+          proOptions={{ hideAttribution: true }}
+          minZoom={0.5}
+          maxZoom={2}
+          translateExtent={[[-500, -500], [1500, 1500]]}
+          nodeExtent={[[-500, -500], [1500, 1500]]}
+          elevateNodesOnSelect={false}
+          panOnDrag={true}
+          zoomOnScroll={true}
+          zoomOnPinch={true}
+          autoPanOnConnect={false}
+          autoPanOnNodeDrag={false}
         >
           <Controls />
           <Background color="#4B5563" gap={20} />
