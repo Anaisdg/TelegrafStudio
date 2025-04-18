@@ -58,10 +58,31 @@ export default function NodeConfig({ node }: NodeConfigProps) {
         // For output nodes, try to auto-populate the namepass field based on connected inputs
         if (node.type === PluginType.OUTPUT) {
           const inputNodes = telegrafConfig.nodes.filter(n => n.type === PluginType.INPUT);
-          const connectedInputs = inputNodes.filter(input => {
-            return telegrafConfig.connections.some(conn => 
-              conn.source === input.id && conn.target === node.id
+          
+          // Function to trace connections recursively from any node to the target output
+          const tracePath = (nodeId: string, visited = new Set<string>()): boolean => {
+            // If we already visited this node, don't recurse 
+            if (visited.has(nodeId)) return false;
+            
+            // Mark this node as visited
+            visited.add(nodeId);
+            
+            // Check if this node has a direct connection to the output
+            const directConnection = telegrafConfig.connections.some(conn => 
+              conn.source === nodeId && conn.target === node.id
             );
+            
+            if (directConnection) return true;
+            
+            // Check if this node connects to another node that eventually connects to the output
+            return telegrafConfig.connections
+              .filter(conn => conn.source === nodeId)
+              .some(conn => tracePath(conn.target, new Set(visited)));
+          };
+          
+          // Get input plugins that have a path to this output
+          const connectedInputs = inputNodes.filter(input => {
+            return tracePath(input.id);
           });
           
           const allInputsConnected = connectedInputs.length === inputNodes.length;
@@ -70,6 +91,7 @@ export default function NodeConfig({ node }: NodeConfigProps) {
           if (!allInputsConnected && connectedInputs.length > 0) {
             const metricNames = connectedInputs.map(input => input.plugin);
             setNamepass(metricNames.join(', '));
+            console.log(`Pre-populated namepass field for ${node.plugin}: ${metricNames.join(', ')}`);
           } else {
             setNamepass('');
           }
@@ -399,11 +421,30 @@ export default function NodeConfig({ node }: NodeConfigProps) {
       // Get all input plugins
       const inputNodes = telegrafConfig.nodes.filter(n => n.type === PluginType.INPUT);
       
-      // Get input plugins that connect to this output
-      const connectedInputs = inputNodes.filter(input => {
-        return telegrafConfig.connections.some(conn => 
-          conn.source === input.id && conn.target === node.id
+      // Function to trace connections recursively from any node to the target output
+      const tracePath = (nodeId: string, visited = new Set<string>()): boolean => {
+        // If we already visited this node, don't recurse 
+        if (visited.has(nodeId)) return false;
+        
+        // Mark this node as visited
+        visited.add(nodeId);
+        
+        // Check if this node has a direct connection to the output
+        const directConnection = telegrafConfig.connections.some(conn => 
+          conn.source === nodeId && conn.target === node.id
         );
+        
+        if (directConnection) return true;
+        
+        // Check if this node connects to another node that eventually connects to the output
+        return telegrafConfig.connections
+          .filter(conn => conn.source === nodeId)
+          .some(conn => tracePath(conn.target, new Set(visited)));
+      };
+      
+      // Get input plugins that have a path to this output
+      const connectedInputs = inputNodes.filter(input => {
+        return tracePath(input.id);
       });
       
       // Check if ALL input plugins connect to this output
@@ -519,8 +560,9 @@ export default function NodeConfig({ node }: NodeConfigProps) {
               <div className="bg-blue-50 text-blue-800 p-2 rounded-md text-xs">
                 <strong>Note:</strong> Output plugins automatically inherit namepass filter based on connected inputs.
                 <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li>If all input plugins connect to this output, no namepass is needed</li>
+                  <li>If all input plugins connect to this output (directly or through processors), no namepass is needed</li>
                   <li>If only some inputs connect, namepass will include just those metrics</li>
+                  <li>Connections through intermediate processor plugins are automatically traced</li>
                   <li>You can still override with your own namepass values below</li>
                 </ul>
               </div>

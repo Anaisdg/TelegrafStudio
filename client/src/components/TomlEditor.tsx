@@ -21,11 +21,30 @@ export default function TomlEditor() {
         // Get all input plugins
         const inputNodes = telegrafConfig.nodes.filter(n => n.type === PluginType.INPUT);
         
-        // Get input plugins that connect to this output
-        const connectedInputs = inputNodes.filter(input => {
-          return telegrafConfig.connections.some(conn => 
-            conn.source === input.id && conn.target === outputNode.id
+        // Function to trace connections recursively from any node to the target output
+        const tracePath = (nodeId: string, visited = new Set<string>()): boolean => {
+          // If we already visited this node, don't recurse 
+          if (visited.has(nodeId)) return false;
+          
+          // Mark this node as visited
+          visited.add(nodeId);
+          
+          // Check if this node has a direct connection to the output
+          const directConnection = telegrafConfig.connections.some(conn => 
+            conn.source === nodeId && conn.target === outputNode.id
           );
+          
+          if (directConnection) return true;
+          
+          // Check if this node connects to another node that eventually connects to the output
+          return telegrafConfig.connections
+            .filter(conn => conn.source === nodeId)
+            .some(conn => tracePath(conn.target, new Set(visited)));
+        };
+        
+        // Get input plugins that have a path to this output
+        const connectedInputs = inputNodes.filter(input => {
+          return tracePath(input.id);
         });
         
         // Check if ALL input plugins connect to this output
