@@ -84,13 +84,19 @@ export default function PluginPanel({ onToggleToml }: PluginPanelProps) {
     const canvasElement = document.querySelector('.react-flow__viewport');
     if (!canvasElement) return;
     
-    // Calculate position - we'll add nodes at staggered positions
-    const basePos = { x: 200, y: 150 };
-    const existingNodes = document.querySelectorAll('.react-flow__node').length;
-    const position = {
-      x: basePos.x + (existingNodes % 3) * 50, 
-      y: basePos.y + Math.floor(existingNodes / 3) * 100
-    };
+    // Use fixed positions based on plugin type to ensure consistent layout
+    let position;
+    if (pluginType === PluginType.INPUT) {
+      position = { x: 100, y: 150 };
+    } else if (pluginType === PluginType.OUTPUT) {
+      position = { x: 600, y: 150 };
+    } else {
+      position = { x: 350, y: 150 };
+    }
+    
+    // Get existing nodes of this type to offset the Y position
+    const existingNodes = document.querySelectorAll(`.react-flow__node[data-type="${pluginType}"]`).length;
+    position.y += existingNodes * 100;
     
     // Create a synthetic event to trigger node addition
     const customEvent = new CustomEvent('telegraf-add-node', {

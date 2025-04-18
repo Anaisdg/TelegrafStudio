@@ -304,24 +304,27 @@ const EditorCanvas = () => {
         if (!type || !pluginName) return;
 
         // Get the position where the node was dropped in the flow space
-        const position = reactFlowInstance.screenToFlowPosition({
+        const exactPosition = reactFlowInstance.screenToFlowPosition({
           x: event.clientX - reactFlowBounds.left,
           y: event.clientY - reactFlowBounds.top,
         });
+        
+        // Snap to grid for cleaner positioning
+        const position = {
+          x: Math.round(exactPosition.x / 20) * 20,
+          y: Math.round(exactPosition.y / 20) * 20
+        };
 
         // Generate a unique ID for the new node
         const nodeId = `${pluginName}-${uuidv4().slice(0, 4)}`;
 
-        // Create the telegraf config node
+        // Create the telegraf config node with precise position
         const telegrafNode = {
           id: nodeId,
           type: type as typeof PluginType[keyof typeof PluginType],
           plugin: pluginName,
-          // Store the position explicitly
-          position: {
-            x: position.x,
-            y: position.y
-          },
+          // Store the position exactly as calculated (important!)
+          position: position,
           data: { ...getDefaultNodeData(pluginName) },
         };
 
@@ -348,15 +351,34 @@ const EditorCanvas = () => {
       
       if (!type || !plugin || !position) return;
       
+      // Determine an exact position based on existing nodes of this type
+      let exactPos = {...position};
+      
+      // Find existing nodes of this type to avoid overlap
+      const existingNodesOfType = telegrafConfig.nodes.filter(n => n.type === type);
+      for (const node of existingNodesOfType) {
+        if (Math.abs(node.position.x - exactPos.x) < 20 && 
+            Math.abs(node.position.y - exactPos.y) < 20) {
+          // Position is too close, adjust the Y position
+          exactPos.y += 100;
+        }
+      }
+      
+      // Snap to grid for cleaner layout
+      const finalPosition = {
+        x: Math.round(exactPos.x / 20) * 20,
+        y: Math.round(exactPos.y / 20) * 20
+      };
+      
       // Generate a unique ID for the new node
       const nodeId = `${plugin}-${uuidv4().slice(0, 4)}`;
       
-      // Create the telegraf config node
+      // Create the telegraf config node with precise position information
       const telegrafNode = {
         id: nodeId,
         type: type as typeof PluginType[keyof typeof PluginType],
         plugin: plugin,
-        position: position,
+        position: finalPosition,
         data: { ...getDefaultNodeData(plugin) },
       };
       
