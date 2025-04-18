@@ -35,9 +35,8 @@ export default function NodeConfig({ node }: NodeConfigProps) {
                          node.type === PluginType.AGGREGATOR || 
                          node.type === PluginType.OUTPUT;
                          
-  const canUseFieldpass = node.type === PluginType.INPUT || 
-                          node.type === PluginType.PROCESSOR ||
-                          node.type === PluginType.AGGREGATOR;
+  // All plugin types can use fieldpass/tagpass
+  const canUseFieldpass = true;
 
   useEffect(() => {
     setNodeData({ ...node.data });
@@ -434,6 +433,13 @@ export default function NodeConfig({ node }: NodeConfigProps) {
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Metric and Field Filtering</h3>
           <p className="text-sm text-gray-600">Configure which metrics and fields this plugin will process</p>
+          
+          {node.type === PluginType.INPUT && (
+            <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-sm flex items-start space-x-2">
+              <span className="font-medium">Input Plugin Note:</span>
+              <span>Input plugins can use fieldpass and tagpass filters but not namepass.</span>
+            </div>
+          )}
         </div>
         
         {canUseNamepass && (
