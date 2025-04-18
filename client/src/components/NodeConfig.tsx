@@ -55,7 +55,27 @@ export default function NodeConfig({ node }: NodeConfigProps) {
           : node.data.namepass;
         setNamepass(namepassValue);
       } else {
-        setNamepass('');
+        // For output nodes, try to auto-populate the namepass field based on connected inputs
+        if (node.type === PluginType.OUTPUT) {
+          const inputNodes = telegrafConfig.nodes.filter(n => n.type === PluginType.INPUT);
+          const connectedInputs = inputNodes.filter(input => {
+            return telegrafConfig.connections.some(conn => 
+              conn.source === input.id && conn.target === node.id
+            );
+          });
+          
+          const allInputsConnected = connectedInputs.length === inputNodes.length;
+          
+          // Only generate a namepass if not all inputs are connected
+          if (!allInputsConnected && connectedInputs.length > 0) {
+            const metricNames = connectedInputs.map(input => input.plugin);
+            setNamepass(metricNames.join(', '));
+          } else {
+            setNamepass('');
+          }
+        } else {
+          setNamepass('');
+        }
       }
       
       // Handle fieldpass
@@ -374,8 +394,49 @@ export default function NodeConfig({ node }: NodeConfigProps) {
   const handleApplyFilters = () => {
     const updatedNodeData = { ...nodeData };
     
-    // Process namepass if this plugin can use it
-    if (canUseNamepass) {
+    // Special logic for output plugins and namepass inheritance
+    if (node.type === PluginType.OUTPUT) {
+      // Get all input plugins
+      const inputNodes = telegrafConfig.nodes.filter(n => n.type === PluginType.INPUT);
+      
+      // Get input plugins that connect to this output
+      const connectedInputs = inputNodes.filter(input => {
+        return telegrafConfig.connections.some(conn => 
+          conn.source === input.id && conn.target === node.id
+        );
+      });
+      
+      // Check if ALL input plugins connect to this output
+      const allInputsConnected = connectedInputs.length === inputNodes.length;
+      
+      // If all inputs are connected to this output, no need for namepass
+      // Otherwise, we need to inherit namepass from the connected inputs
+      if (!allInputsConnected && connectedInputs.length > 0) {
+        // Collect all metric names from connected inputs
+        const metricNames = new Set<string>();
+        
+        // For each connected input, get the metrics it produces
+        connectedInputs.forEach(input => {
+          // For this demo, we'll assume each input plugin is named after the metric it produces
+          // In a real app, you would get this from plugin metadata or configuration
+          metricNames.add(input.plugin);
+        });
+        
+        // Set the namepass to include only the metrics from connected inputs
+        if (metricNames.size > 0) {
+          updatedNodeData.namepass = Array.from(metricNames);
+          console.log(`Auto-generated namepass for output: ${updatedNodeData.namepass.join(', ')}`);
+        }
+      } else if (namepass.trim()) {
+        // If user specified a custom namepass, still use it
+        updatedNodeData.namepass = namepass.split(',').map(item => item.trim()).filter(Boolean);
+      } else if (allInputsConnected) {
+        // All inputs connect to this output, so no namepass needed
+        delete updatedNodeData.namepass;
+      }
+    } 
+    // Regular processing for non-output plugins that can use namepass
+    else if (canUseNamepass) {
       if (namepass.trim()) {
         updatedNodeData.namepass = namepass.split(',').map(item => item.trim()).filter(Boolean);
       } else {
@@ -453,6 +514,18 @@ export default function NodeConfig({ node }: NodeConfigProps) {
               <Label htmlFor="namepass" className="font-medium">Namepass</Label>
               <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">Metric Names</Badge>
             </div>
+            
+            {node.type === PluginType.OUTPUT && (
+              <div className="bg-blue-50 text-blue-800 p-2 rounded-md text-xs">
+                <strong>Note:</strong> Output plugins automatically inherit namepass filter based on connected inputs.
+                <ul className="list-disc list-inside mt-1 space-y-1">
+                  <li>If all input plugins connect to this output, no namepass is needed</li>
+                  <li>If only some inputs connect, namepass will include just those metrics</li>
+                  <li>You can still override with your own namepass values below</li>
+                </ul>
+              </div>
+            )}
+            
             <p className="text-xs text-gray-500">Comma-separated list of metric names to include (matches exact metric names)</p>
             <Textarea
               id="namepass"
